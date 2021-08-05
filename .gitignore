@@ -1,0 +1,8 @@
+# Data set directory
+/data/
+
+# Python cache
+*/__pycache__/
+
+# PyCharm metadata directoy
+/.idea/
