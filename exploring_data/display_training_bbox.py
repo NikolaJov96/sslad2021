@@ -19,9 +19,8 @@ if __name__ == '__main__':
         training_image: Image = data_set.training_images[training_image_id]
         img = training_image.draw_annotations()
 
-        resize = 1000 / img.shape[1]
-        new_size = (int(img.shape[1] * resize), int(img.shape[0] * resize))
-        resized_img = cv2.resize(img, new_size)
+        resized_img = Image.resize_to_width(img, 1000)
+
         cv2.imshow(window_name, resized_img)
         cv2.waitKey(0)
 

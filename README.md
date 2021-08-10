@@ -12,5 +12,5 @@ Explore the data set by running scripts inside the `exploring_data/` directory.
 ### Pytorch RCNN demo
 
 Pytorch util modules are gathered from [here](https://github.com/pytorch/vision/tree/master/references/detection) and placed in `pytorchscripts/`. Pytorch demo code is downloaded from [here](https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html), slightly modified and placed in `playground/`
-Download the data set from [here](https://www.cis.upenn.edu/~jshi/ped_html/), and place the extracted data into `sslad2021/data/PennFudanPed/` directory.
+Download the data set from [here](https://www.cis.upenn.edu/~jshi/ped_html/), and place the extracted data into `data/PennFudanPed/` directory.
 

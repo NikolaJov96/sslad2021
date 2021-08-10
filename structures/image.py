@@ -58,9 +58,19 @@ class Image:
                 (annotation.bbox[0], annotation.bbox[1]),
                 (annotation.bbox[0] + annotation.bbox[2], annotation.bbox[1] + annotation.bbox[3]),
                 annotation.category.get_color(),
-                4)
+                2)
 
         if output_file is not None:
             cv2.imwrite(output_file, bbox_img)
 
         return bbox_img
+
+    @staticmethod
+    def resize_to_width(img, new_width):
+        """
+        Returns new image resized to the new width, keeping the aspect ration
+        """
+
+        coefficient = new_width / img.shape[1]
+        new_size = (int(img.shape[1] * coefficient), int(img.shape[0] * coefficient))
+        return cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)

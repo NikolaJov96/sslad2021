@@ -54,6 +54,8 @@ class DataSet:
         self.training_images = {}
         self.validation_images = {}
         self.testing_images = {}
+        self.image_width = 0
+        self.image_height = 0
 
     def load(self):
         """
@@ -100,6 +102,11 @@ class DataSet:
         for annotation in testing_data['annotations']:
             self.testing_images[annotation['image_id']].add_annotation(Annotation(
                 self.categories[annotation['category_id']], annotation))
+
+        # Set image width and height parameters
+        image = list(self.training_images.values())[0]
+        self.image_width = image.width
+        self.image_height = image.height
 
 
 if __name__ == '__main__':
