@@ -11,6 +11,8 @@ Explore the data set by running scripts inside the `exploring_data/` directory.
 
 ### Pytorch RCNN demo
 
-Pytorch util modules are gathered from [here](https://github.com/pytorch/vision/tree/master/references/detection) and placed in `pytorchscripts/`. Pytorch demo code is downloaded from [here](https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html), slightly modified and placed in `playground/`
-Download the data set from [here](https://www.cis.upenn.edu/~jshi/ped_html/), and place the extracted data into `data/PennFudanPed/` directory.
+Pytorch util modules are gathered from [here](https://github.com/pytorch/vision/tree/master/references/detection) and placed in `pytorchscripts/`. Pytorch demo code is downloaded from [here](https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html), slightly modified and placed in `playground/pytorch_RCNN_minimal_demo`.
 
+Download the Penn-Fudan pedestrian data set for this demo from [here](https://www.cis.upenn.edu/~jshi/ped_html/), and place the extracted data into `data/PennFudanPed/` directory.
+
+Additionally train the pretrained pytorch MaskRCNN model and display testing set prediction results by running `playground/pytorch_RCNN_minimal_demo\penn_fudan_mask_cnn.py`.

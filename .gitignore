@@ -1,8 +1,14 @@
 # Data set directory
 /data/
 
-# Python cache
-*/__pycache__/
+# Saved pytorch models
+*.pt
 
-# PyCharm metadata directoy
+# Python cache
+*.pyc
+
+# PyCharm metadata directory
 /.idea/
+
+# VSCode metadata directory
+/.vscode/

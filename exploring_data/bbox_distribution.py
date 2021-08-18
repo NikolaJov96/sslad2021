@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from structures.data_set import DataSet
-from structures.image import Image
+from structures.sslad_2d.data_set import DataSet
+from structures.sslad_2d.image import Image
 
 
 if __name__ == '__main__':
@@ -59,6 +59,8 @@ if __name__ == '__main__':
         # Show the image
         rgb_image = Image.resize_to_width(rgb_image, 1000)
         cv2.imshow(window_name, rgb_image)
-        cv2.waitKey(0)
+        # Exit on esc
+        if cv2.waitKey(0) == 27:
+            break
 
     cv2.destroyAllWindows()

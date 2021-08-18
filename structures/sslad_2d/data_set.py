@@ -1,10 +1,10 @@
 import json
 import os
 
-from structures.annotation import Annotation
-from structures.category import Category
-from structures.definitions import DataSetTypes
-from structures.image import Image
+from structures.sslad_2d.annotation import Annotation
+from structures.sslad_2d.category import Category
+from structures.sslad_2d.definitions import DataSetTypes
+from structures.sslad_2d.image import Image
 
 """
 Annotation file structure:

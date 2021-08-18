@@ -1,4 +1,4 @@
-from structures.definitions import Colors
+from structures.sslad_2d.definitions import Colors
 
 
 class Category:

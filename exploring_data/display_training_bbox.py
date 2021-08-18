@@ -1,12 +1,12 @@
 import cv2
 
-from structures.data_set import DataSet
-from structures.image import Image
+from structures.sslad_2d.data_set import DataSet
+from structures.sslad_2d.image import Image
 
 
 if __name__ == '__main__':
     """
-    Cycles through training set images and displays them with drawn annotations 
+    Cycles through training set images and displays them with drawn annotations
     """
 
     data_set = DataSet()
@@ -22,6 +22,8 @@ if __name__ == '__main__':
         resized_img = Image.resize_to_width(img, 1000)
 
         cv2.imshow(window_name, resized_img)
-        cv2.waitKey(0)
+        # Exit on esc
+        if cv2.waitKey(0) == 27:
+            break
 
     cv2.destroyAllWindows()
