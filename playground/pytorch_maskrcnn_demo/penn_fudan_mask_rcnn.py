@@ -13,7 +13,7 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 import pytorchscripts.utils as utils
 from pytorchscripts.engine import train_one_epoch, evaluate
 
-from structures.PennFudanPed.data_set import PennFudanDataset
+from structures.penn_fudan_ped.penn_fudan_dataset import PennFudanDataset
 
 
 class PennFudanMaskRCNN():
@@ -167,12 +167,12 @@ if __name__ == '__main__':
         print('model saved')
 
     data_set = PennFudanDataset(train=False)
-    print('loaded dataset with {} images'.format(len(data_set)))
+    data_set_size = len(data_set)
+    print('loaded dataset with {} images'.format(data_set_size))
 
     window_name = 'Predictions'
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    data_set_size = len(data_set)
     for i in range(data_set_size):
 
         # Predict one by one to avoid exceeding GPU memory
