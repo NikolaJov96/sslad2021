@@ -9,13 +9,13 @@ if __name__ == '__main__':
     Cycles through training set images and displays them with drawn annotations
     """
 
-    data_set = SSLADDataset()
-    data_set.load()
+    dataset = SSLADDataset()
+    dataset.load()
 
     window_name = 'Annotated images'
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    for training_image in data_set.training_images:
+    for training_image in dataset.training_images:
 
         img = training_image.draw_annotations()
 

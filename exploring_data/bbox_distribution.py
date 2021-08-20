@@ -10,17 +10,17 @@ if __name__ == '__main__':
     Visualize bbox image coverage per category
     """
 
-    data_set = SSLADDataset()
-    data_set.load()
+    dataset = SSLADDataset()
+    dataset.load()
 
     # Initialize bbox count per pixel for each category
     bbox_distributions = {category_id: {
-        'coverage': np.zeros((data_set.image_height, data_set.image_width)),
+        'coverage': np.zeros((dataset.image_height, dataset.image_width)),
         'occurrences': 0
-    } for category_id in data_set.categories}
+    } for category_id in dataset.categories}
 
     # Count bbox coverage
-    for image in data_set.training_images:
+    for image in dataset.training_images:
         for annotation in image.annotations:
             dist = bbox_distributions[annotation.category.category_id]
             p1 = (annotation.bbox[0], annotation.bbox[1])
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # Occurrences per category
     for category_id in bbox_distributions:
         dist = bbox_distributions[category_id]
-        print(category_id, data_set.categories[category_id].name, dist['occurrences'])
+        print(category_id, dataset.categories[category_id].name, dist['occurrences'])
 
     # Visualize distributions
     window_name = 'Bbox distribution'
@@ -41,14 +41,14 @@ if __name__ == '__main__':
         dist = bbox_distributions[category_id]
 
         # Create the gray distribution image
-        distribution_image = np.zeros((data_set.image_height, data_set.image_width, 1), np.uint8)
+        distribution_image = np.zeros((dataset.image_height, dataset.image_width, 1), np.uint8)
         distribution_image[:, :, 0] = dist['coverage'][:] * 255 / np.max(dist['coverage'])
 
         rgb_image = cv2.cvtColor(distribution_image, cv2.COLOR_GRAY2RGB)
 
         # Add the text category label
         cv2.putText(rgb_image,
-                    data_set.categories[category_id].name,
+                    dataset.categories[category_id].name,
                     (10, 50),
                     cv2.FONT_HERSHEY_TRIPLEX,
                     1,

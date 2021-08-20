@@ -157,20 +157,20 @@ if __name__ == '__main__':
         model.save_model()
         print('model saved')
 
-    data_set = PennFudanDataset(train=False)
-    data_set_size = len(data_set)
-    print('loaded dataset with {} images'.format(data_set_size))
+    dataset = PennFudanDataset(train=False)
+    dataset_size = len(dataset)
+    print('loaded dataset with {} images'.format(dataset_size))
 
     window_name = 'Predictions'
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    for i in range(data_set_size):
+    for i in range(dataset_size):
 
         # Predict one by one to avoid exceeding GPU memory
-        x = [data_set[i][0]]
+        x = [dataset[i][0]]
         prediction = model.eval(x)[0]
 
-        image = cv2.imread(data_set.get_image_path(i), cv2.COLOR_BGR2RGB)
+        image = cv2.imread(dataset.get_image_path(i), cv2.COLOR_BGR2RGB)
 
         model.draw_boxes([prediction], [image])
 

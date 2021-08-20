@@ -1,5 +1,6 @@
 import cv2
 import os
+from PIL import Image
 
 
 class Image:
@@ -7,7 +8,7 @@ class Image:
     Represents a single image with its description, content and annotations
     """
 
-    def __init__(self, image_path_prefix, image_data, data_set_type):
+    def __init__(self, image_path_prefix, image_data, dataset_type):
         """
         Initializes image description excluding annotations
         Image content is loaded when needed
@@ -16,9 +17,10 @@ class Image:
         self.file_name = os.path.join(image_path_prefix, image_data['file_name'])
         self.height = image_data['height']
         self.width = image_data['width']
-        self.data_set_type = data_set_type
+        self.dataset_type = dataset_type
         self.annotations = []
-        self.__img = None
+        self.__cv2_img = None
+        self.__pil_img = None
 
     def add_annotation(self, annotation):
         """
@@ -27,15 +29,25 @@ class Image:
 
         self.annotations.append(annotation)
 
-    def get_img(self):
+    def get_cv2_img(self):
         """
-        Loads the image content from file if not already loaded and returns it
+        Loads the image content from file if not already loaded and returns it in OpenCV format
         """
 
-        if self.__img is None:
-            self.__img = cv2.imread(self.file_name)
+        if self.__cv2_img is None:
+            self.__cv2_img = cv2.imread(self.file_name)
 
-        return self.__img
+        return self.__cv2_img
+
+    def get_pil_img(self):
+        """
+        Loads the image content from file if not already loaded and returns it in PIL format
+        """
+
+        if self.__pil_img is None:
+            self.__pil_img = Image.open(self.get_image_path(self.file_name)).convert("RGB")
+
+        return self.__pil_img
 
     def draw_annotations(self, annotations=None, output_file=None):
         """
@@ -48,7 +60,7 @@ class Image:
             annotations = self.annotations
 
         # Make a copy of the original image
-        bbox_img = self.get_img().copy()
+        bbox_img = self.get_cv2_img().copy()
 
         # Draw annotations
         for annotation in annotations:

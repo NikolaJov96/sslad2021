@@ -124,32 +124,32 @@ if __name__ == '__main__':
     Run quick tests to check if dataset is being loaded correctly
     """
 
-    data_set = SSLADDataset()
-    data_set.load()
+    dataset = SSLADDataset()
+    dataset.load()
 
     print('Categories')
     categories = [
-        (category_id, data_set.categories[category_id].name, data_set.categories[category_id].get_color())
-        for category_id in data_set.categories]
+        (category_id, dataset.categories[category_id].name, dataset.categories[category_id].get_color())
+        for category_id in dataset.categories]
     print(categories)
 
-    training_annotation_counts = [len(image.annotations) for image in data_set.training_images]
-    validation_annotation_counts = [len(image.annotations) for image in data_set.validation_images]
-    testing_annotation_counts = [len(image.annotations) for image in data_set.testing_images]
-    print('Training images: {}'.format(len(data_set.training_images)))
+    training_annotation_counts = [len(image.annotations) for image in dataset.training_images]
+    validation_annotation_counts = [len(image.annotations) for image in dataset.validation_images]
+    testing_annotation_counts = [len(image.annotations) for image in dataset.testing_images]
+    print('Training images: {}'.format(len(dataset.training_images)))
     print('Average annotations per image: {}'.format(sum(training_annotation_counts) / len(training_annotation_counts)))
-    print('Validation images: {}'.format(len(data_set.validation_images)))
+    print('Validation images: {}'.format(len(dataset.validation_images)))
     print('Average annotations per image: {}'.format(
         sum(validation_annotation_counts) / len(validation_annotation_counts)))
-    print('Testing images: {}'.format(len(data_set.testing_images)))
+    print('Testing images: {}'.format(len(dataset.testing_images)))
     print('Average annotations per image: {}'.format(sum(testing_annotation_counts) / len(testing_annotation_counts)))
 
     assert len(categories) > 0
-    assert len(data_set.training_images) > 0
+    assert len(dataset.training_images) > 0
     assert len(training_annotation_counts) > 0
-    assert len(data_set.validation_images) > 0
+    assert len(dataset.validation_images) > 0
     assert len(validation_annotation_counts) > 0
-    assert len(data_set.testing_images) > 0
+    assert len(dataset.testing_images) > 0
     assert sum(testing_annotation_counts) == 0
 
     print('Tests passed')
