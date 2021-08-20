@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from structures.sslad_2d.data_set import DataSet
+from structures.sslad_2d.sslad_dataset import SSLADDataset
 from structures.sslad_2d.image import Image
 
 
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     Visualize bbox image coverage per category
     """
 
-    data_set = DataSet()
+    data_set = SSLADDataset()
     data_set.load()
 
     # Initialize bbox count per pixel for each category

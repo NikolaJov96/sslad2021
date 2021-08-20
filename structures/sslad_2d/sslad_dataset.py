@@ -3,7 +3,7 @@ import os
 
 from structures.sslad_2d.annotation import Annotation
 from structures.sslad_2d.category import Category
-from structures.sslad_2d.definitions import DataSetTypes
+from structures.sslad_2d.definitions import SSLADDatasetTypes
 from structures.sslad_2d.image import Image
 
 """
@@ -34,9 +34,9 @@ Annotation file structure:
 """
 
 
-class DataSet:
+class SSLADDataset:
     """
-    Class wrapping the whole data set
+    Class wrapping the whole dataset
     """
 
     LABELED_DATA_PATH = os.path.join('data', 'SSLAD-2D', 'labeled')
@@ -59,14 +59,14 @@ class DataSet:
 
     def load(self):
         """
-        Load data set json descriptor files and store their data in structured from
+        Load dataset json descriptor files and store their data in structured from
         """
 
-        with open(os.path.join(DataSet.ANNOTATIONS_PATH, 'instance_train.json')) as in_file:
+        with open(os.path.join(SSLADDataset.ANNOTATIONS_PATH, 'instance_train.json')) as in_file:
             training_data = json.load(in_file)
-        with open(os.path.join(DataSet.ANNOTATIONS_PATH, 'instance_val.json')) as in_file:
+        with open(os.path.join(SSLADDataset.ANNOTATIONS_PATH, 'instance_val.json')) as in_file:
             validation_data = json.load(in_file)
-        with open(os.path.join(DataSet.ANNOTATIONS_PATH, 'instance_test.json')) as in_file:
+        with open(os.path.join(SSLADDataset.ANNOTATIONS_PATH, 'instance_test.json')) as in_file:
             testing_data = json.load(in_file)
 
         # Initialize categories
@@ -81,7 +81,7 @@ class DataSet:
         # Initialize training images
         for image in training_data['images']:
             training_images_map[image['id']] = Image(
-                DataSet.TRAINING_IMAGES_PATH, image, DataSetTypes.TRAINING)
+                SSLADDataset.TRAINING_IMAGES_PATH, image, SSLADDatasetTypes.TRAINING)
 
         # Initialize training annotations
         for annotation in training_data['annotations']:
@@ -91,7 +91,7 @@ class DataSet:
         # Initialize validation images
         for image in validation_data['images']:
             validation_images_map[image['id']] = Image(
-                DataSet.VALIDATION_IMAGES_PATH, image, DataSetTypes.VALIDATION)
+                SSLADDataset.VALIDATION_IMAGES_PATH, image, SSLADDatasetTypes.VALIDATION)
 
         # Initialize validation annotations
         for annotation in validation_data['annotations']:
@@ -101,7 +101,7 @@ class DataSet:
         # Initialize testing images
         for image in testing_data['images']:
             testing_images_map[image['id']] = Image(
-                DataSet.TESTING_IMAGES_PATH, image, DataSetTypes.TESTING)
+                SSLADDataset.TESTING_IMAGES_PATH, image, SSLADDatasetTypes.TESTING)
 
         # Initialize testing annotations
         for annotation in testing_data['annotations']:
@@ -121,10 +121,10 @@ class DataSet:
 
 if __name__ == '__main__':
     """
-    Run quick tests to check if data set is being loaded correctly
+    Run quick tests to check if dataset is being loaded correctly
     """
 
-    data_set = DataSet()
+    data_set = SSLADDataset()
     data_set.load()
 
     print('Categories')

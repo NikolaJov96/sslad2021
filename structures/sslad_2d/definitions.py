@@ -1,9 +1,9 @@
 import enum
 
 
-class DataSetTypes(enum.Enum):
+class SSLADDatasetTypes(enum.Enum):
     """
-    Enum containing existing data set types
+    Enum containing existing dataset types
     """
     TRAINING = enum.auto()
     VALIDATION = enum.auto()

@@ -1,6 +1,6 @@
 import cv2
 
-from structures.sslad_2d.data_set import DataSet
+from structures.sslad_2d.sslad_dataset import SSLADDataset
 from structures.sslad_2d.image import Image
 
 
@@ -9,7 +9,7 @@ if __name__ == '__main__':
     Cycles through training set images and displays them with drawn annotations
     """
 
-    data_set = DataSet()
+    data_set = SSLADDataset()
     data_set.load()
 
     window_name = 'Annotated images'

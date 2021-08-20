@@ -11,7 +11,7 @@ import pytorchscripts.transforms as Transforms
 
 class PennFudanDataset(object):
     """
-    Class wrapping the PennFudan data set
+    Class wrapping the PennFudan dataset
     """
 
     DATA_PATH = os.path.join('data', 'PennFudanPed')
@@ -81,7 +81,7 @@ class PennFudanDataset(object):
 
     def __len__(self):
         """
-        Return the number of images in the data set
+        Return the number of images in the dataset
         """
 
         return len(self.image_paths)
