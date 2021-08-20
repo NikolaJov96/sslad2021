@@ -15,8 +15,8 @@ if __name__ == '__main__':
     window_name = 'Annotated images'
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    for training_image_id in data_set.training_images:
-        training_image: Image = data_set.training_images[training_image_id]
+    for training_image in data_set.training_images:
+
         img = training_image.draw_annotations()
 
         resized_img = Image.resize_to_width(img, 1000)

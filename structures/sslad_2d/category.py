@@ -10,6 +10,7 @@ class Category:
         """
         Initializes a category when loaded from the training annotations descriptor file
         """
+
         if category_id < 1 or category_id > 6:
             print('Invalid category id {}'.format(category_id))
             exit(1)
@@ -21,4 +22,5 @@ class Category:
         """
         Returns a color assigned to the category
         """
+
         return Colors.get_color_by_id(self.category_id)

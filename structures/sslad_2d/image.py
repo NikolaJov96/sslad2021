@@ -14,11 +14,10 @@ class Image:
         """
 
         self.file_name = os.path.join(image_path_prefix, image_data['file_name'])
-        self.image_id = image_data['id']
         self.height = image_data['height']
         self.width = image_data['width']
         self.data_set_type = data_set_type
-        self.annotations = {}
+        self.annotations = []
         self.__img = None
 
     def add_annotation(self, annotation):
@@ -26,7 +25,7 @@ class Image:
         Adds new annotation to the image
         """
 
-        self.annotations[annotation.annotation_id] = annotation
+        self.annotations.append(annotation)
 
     def get_img(self):
         """
@@ -46,7 +45,7 @@ class Image:
         """
 
         if annotations is None:
-            annotations = self.annotations.values()
+            annotations = self.annotations
 
         # Make a copy of the original image
         bbox_img = self.get_img().copy()
@@ -58,7 +57,8 @@ class Image:
                 (annotation.bbox[0], annotation.bbox[1]),
                 (annotation.bbox[0] + annotation.bbox[2], annotation.bbox[1] + annotation.bbox[3]),
                 annotation.category.get_color(),
-                2)
+                2
+            )
 
         if output_file is not None:
             cv2.imwrite(output_file, bbox_img)

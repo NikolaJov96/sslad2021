@@ -20,10 +20,8 @@ if __name__ == '__main__':
     } for category_id in data_set.categories}
 
     # Count bbox coverage
-    for image_id in data_set.training_images:
-        training_image: Image = data_set.training_images[image_id]
-        for annotation_id in training_image.annotations:
-            annotation = training_image.annotations[annotation_id]
+    for image in data_set.training_images:
+        for annotation in image.annotations:
             dist = bbox_distributions[annotation.category.category_id]
             p1 = (annotation.bbox[0], annotation.bbox[1])
             p2 = (annotation.bbox[0] + annotation.bbox[2], annotation.bbox[1] + annotation.bbox[3])

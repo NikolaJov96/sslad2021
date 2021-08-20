@@ -51,9 +51,9 @@ class DataSet:
         """
 
         self.categories = {}
-        self.training_images = {}
-        self.validation_images = {}
-        self.testing_images = {}
+        self.training_images = []
+        self.validation_images = []
+        self.testing_images = []
         self.image_width = 0
         self.image_height = 0
 
@@ -73,38 +73,48 @@ class DataSet:
         for category in training_data['categories']:
             self.categories[category['id']] = Category(category['name'], category['id'])
 
+        # Define temporary maps
+        training_images_map = {}
+        validation_images_map = {}
+        testing_images_map = {}
+
         # Initialize training images
         for image in training_data['images']:
-            self.training_images[image['id']] = Image(
+            training_images_map[image['id']] = Image(
                 DataSet.TRAINING_IMAGES_PATH, image, DataSetTypes.TRAINING)
 
         # Initialize training annotations
         for annotation in training_data['annotations']:
-            self.training_images[annotation['image_id']].add_annotation(Annotation(
+            training_images_map[annotation['image_id']].add_annotation(Annotation(
                 self.categories[annotation['category_id']], annotation))
 
         # Initialize validation images
         for image in validation_data['images']:
-            self.validation_images[image['id']] = Image(
+            validation_images_map[image['id']] = Image(
                 DataSet.VALIDATION_IMAGES_PATH, image, DataSetTypes.VALIDATION)
 
         # Initialize validation annotations
         for annotation in validation_data['annotations']:
-            self.validation_images[annotation['image_id']].add_annotation(Annotation(
+            validation_images_map[annotation['image_id']].add_annotation(Annotation(
                 self.categories[annotation['category_id']], annotation))
 
         # Initialize testing images
         for image in testing_data['images']:
-            self.testing_images[image['id']] = Image(
+            testing_images_map[image['id']] = Image(
                 DataSet.TESTING_IMAGES_PATH, image, DataSetTypes.TESTING)
 
         # Initialize testing annotations
         for annotation in testing_data['annotations']:
-            self.testing_images[annotation['image_id']].add_annotation(Annotation(
+            testing_images_map[annotation['image_id']].add_annotation(Annotation(
                 self.categories[annotation['category_id']], annotation))
 
+        # Move values from temporary maps to lists
+        self.training_images = list(training_images_map.values())
+        self.validation_images = list(validation_images_map.values())
+        self.testing_images = list(testing_images_map.values())
+
         # Set image width and height parameters
-        image = list(self.training_images.values())[0]
+        image = self.training_images[0]
         self.image_width = image.width
         self.image_height = image.height
 
@@ -123,12 +133,9 @@ if __name__ == '__main__':
         for category_id in data_set.categories]
     print(categories)
 
-    training_annotation_counts = \
-        [len(data_set.training_images[image_id].annotations) for image_id in data_set.training_images]
-    validation_annotation_counts = \
-        [len(data_set.validation_images[image_id].annotations) for image_id in data_set.validation_images]
-    testing_annotation_counts = \
-        [len(data_set.testing_images[image_id].annotations) for image_id in data_set.testing_images]
+    training_annotation_counts = [len(image.annotations) for image in data_set.training_images]
+    validation_annotation_counts = [len(image.annotations) for image in data_set.validation_images]
+    testing_annotation_counts = [len(image.annotations) for image in data_set.testing_images]
     print('Training images: {}'.format(len(data_set.training_images)))
     print('Average annotations per image: {}'.format(sum(training_annotation_counts) / len(training_annotation_counts)))
     print('Validation images: {}'.format(len(data_set.validation_images)))

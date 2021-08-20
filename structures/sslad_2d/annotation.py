@@ -7,7 +7,7 @@ class Annotation:
         """
         Initializes annotation description
         """
+
         self.category = category
         self.bbox = annotation_data['bbox']
         self.area = annotation_data['area']
-        self.annotation_id = annotation_data['id']
