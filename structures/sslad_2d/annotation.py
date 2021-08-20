@@ -9,5 +9,8 @@ class Annotation:
         """
 
         self.category = category
-        self.bbox = annotation_data['bbox']
+        self.x = annotation_data['bbox'][0]
+        self.y = annotation_data['bbox'][1]
+        self.w = annotation_data['bbox'][2]
+        self.h = annotation_data['bbox'][3]
         self.area = annotation_data['area']

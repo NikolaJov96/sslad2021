@@ -66,8 +66,8 @@ class Image:
         for annotation in annotations:
             cv2.rectangle(
                 bbox_img,
-                (annotation.bbox[0], annotation.bbox[1]),
-                (annotation.bbox[0] + annotation.bbox[2], annotation.bbox[1] + annotation.bbox[3]),
+                (annotation.x, annotation.y),
+                (annotation.x + annotation.w, annotation.y + annotation.h),
                 annotation.category.get_color(),
                 2
             )

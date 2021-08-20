@@ -23,8 +23,8 @@ if __name__ == '__main__':
     for image in dataset.training_images:
         for annotation in image.annotations:
             dist = bbox_distributions[annotation.category.category_id]
-            p1 = (annotation.bbox[0], annotation.bbox[1])
-            p2 = (annotation.bbox[0] + annotation.bbox[2], annotation.bbox[1] + annotation.bbox[3])
+            p1 = (annotation.x, annotation.y)
+            p2 = (annotation.x + annotation.w, annotation.y + annotation.h)
             dist['coverage'][p1[1]:p2[1], p1[0]:p2[0]] += 1
             dist['occurrences'] += 1
 
