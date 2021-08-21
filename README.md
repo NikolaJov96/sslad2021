@@ -24,7 +24,7 @@ python3 exploring_data/bbox_distribution.py
 
 Open-source PyTorch util scripts used for easier managing of PyTorch models are taken from [here](https://github.com/pytorch/vision/tree/master/references/detection) and placed in `pytorchscripts/`.
 
-## Additional experiments
+## Warm-up experiments
 
 Experiments using different datasets or non-ImageNet pretraining and do not satisfy the competition rules. These models are placed in `playground/`.
 
@@ -46,4 +46,12 @@ Equivalent to the Mask RCNN demo, with Mask RCNN swapped with Faster RCNN and pr
 
 ```
 python3 playground/pytorch_faster_rcnn_demo/penn_fudan_faster_rcnn.py
+```
+
+### SSLAD-2D minimal PyTorch Faster RCNN
+
+Equivalent to previous PyTorch implementations but adapted to the SSLAD-2D dataset. When pretrained on COCO train2017, learns reasonable vehicle prediction out of the box.
+
+```
+python3 playground/pytorch_faster_rcnn_sslad_minimal/sslad_faster_rcnn.py
 ```
