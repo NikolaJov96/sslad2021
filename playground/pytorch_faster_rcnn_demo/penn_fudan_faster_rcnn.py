@@ -145,7 +145,7 @@ if __name__ == '__main__':
     Test the model on a few images
     """
 
-    model = PennFudanFasterRCNN(num_epochs=100)
+    model = PennFudanFasterRCNN()
 
     print('trying to load the model')
     if model.load_model():
