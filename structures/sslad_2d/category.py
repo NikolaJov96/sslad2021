@@ -12,7 +12,7 @@ class Category:
         """
 
         if category_id < 1 or category_id > 6:
-            print('Invalid category id {}'.format(category_id))
+            print('invalid category id {}'.format(category_id))
             exit(1)
 
         self.name = name

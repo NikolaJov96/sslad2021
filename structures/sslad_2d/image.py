@@ -1,6 +1,6 @@
 import cv2
 import os
-from PIL import Image
+from PIL import Image as PILImage
 
 
 class Image:
@@ -19,8 +19,6 @@ class Image:
         self.width = image_data['width']
         self.dataset_type = dataset_type
         self.annotations = []
-        self.__cv2_img = None
-        self.__pil_img = None
 
     def add_annotation(self, annotation):
         """
@@ -34,20 +32,14 @@ class Image:
         Loads the image content from file if not already loaded and returns it in OpenCV format
         """
 
-        if self.__cv2_img is None:
-            self.__cv2_img = cv2.imread(self.file_name)
-
-        return self.__cv2_img
+        return cv2.imread(self.file_name)
 
     def get_pil_img(self):
         """
         Loads the image content from file if not already loaded and returns it in PIL format
         """
 
-        if self.__pil_img is None:
-            self.__pil_img = Image.open(self.get_image_path(self.file_name)).convert("RGB")
-
-        return self.__pil_img
+        return PILImage.open(self.file_name).convert("RGB")
 
     def draw_annotations(self, annotations=None, output_file=None):
         """
@@ -66,8 +58,8 @@ class Image:
         for annotation in annotations:
             cv2.rectangle(
                 bbox_img,
-                (annotation.x, annotation.y),
-                (annotation.x + annotation.w, annotation.y + annotation.h),
+                (round(annotation.x), round(annotation.y)),
+                (round(annotation.x + annotation.w), round(annotation.y + annotation.h)),
                 annotation.category.get_color(),
                 2
             )

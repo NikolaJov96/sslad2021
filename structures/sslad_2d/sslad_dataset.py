@@ -85,7 +85,7 @@ class SSLADDataset:
 
         # Initialize training annotations
         for annotation in training_data['annotations']:
-            training_images_map[annotation['image_id']].add_annotation(Annotation(
+            training_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
                 self.categories[annotation['category_id']], annotation))
 
         # Initialize validation images
@@ -95,7 +95,7 @@ class SSLADDataset:
 
         # Initialize validation annotations
         for annotation in validation_data['annotations']:
-            validation_images_map[annotation['image_id']].add_annotation(Annotation(
+            validation_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
                 self.categories[annotation['category_id']], annotation))
 
         # Initialize testing images
@@ -105,12 +105,13 @@ class SSLADDataset:
 
         # Initialize testing annotations
         for annotation in testing_data['annotations']:
-            testing_images_map[annotation['image_id']].add_annotation(Annotation(
+            testing_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
                 self.categories[annotation['category_id']], annotation))
 
         # Move values from temporary maps to lists
-        self.training_images = list(training_images_map.values())
-        self.validation_images = list(validation_images_map.values())
+        # Skip any images with no annotations in training and validation sets
+        self.training_images = [image for image in training_images_map.values() if len(image.annotations) > 0]
+        self.validation_images = [image for image in validation_images_map.values() if len(image.annotations) > 0]
         self.testing_images = list(testing_images_map.values())
 
         # Set image width and height parameters
@@ -151,5 +152,9 @@ if __name__ == '__main__':
     assert len(validation_annotation_counts) > 0
     assert len(dataset.testing_images) > 0
     assert sum(testing_annotation_counts) == 0
+
+    # No images witout any annotations in training and validations sets
+    assert len([image for image in dataset.training_images if len(image.annotations) == 0]) == 0
+    assert len([image for image in dataset.validation_images if len(image.annotations) == 0]) == 0
 
     print('Tests passed')
