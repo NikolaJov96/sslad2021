@@ -13,7 +13,7 @@ import pycocotools.mask as mask_util
 
 from collections import defaultdict
 
-import pytorchscripts.utils as utils
+import playground.pytorchscripts.utils as utils
 
 
 class CocoEvaluator(object):

@@ -9,8 +9,8 @@ import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
-import pytorchscripts.utils as utils
-from pytorchscripts.engine import train_one_epoch, evaluate
+import playground.pytorchscripts.utils as utils
+from playground.pytorchscripts.engine import train_one_epoch, evaluate
 
 from structures.penn_fudan_ped.penn_fudan_dataset import PennFudanDataset
 

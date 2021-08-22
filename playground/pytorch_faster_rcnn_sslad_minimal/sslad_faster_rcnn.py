@@ -10,8 +10,8 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.transforms import transforms as T
 
-import pytorchscripts.utils as utils
-from pytorchscripts.engine import train_one_epoch, evaluate
+import playground.pytorchscripts.utils as utils
+from playground.pytorchscripts.engine import train_one_epoch, evaluate
 
 from structures.sslad_2d.annotation import Annotation
 from structures.sslad_2d.image import Image
@@ -20,7 +20,7 @@ from structures.sslad_2d.pytorch_sslad_dataset import SSLADDataset, PyTorchSSLAD
 
 class SSLADFasterRCNN():
     """
-    Class wrapping the PyTorch FasterRCNN pretrained on COCO train2017 applied to the SSLAD-2D dataset
+    Class wrapping the PyTorch FasterRCNN pretrained on COCO dataset applied to the SSLAD-2D dataset
     Intended as minimal working implementation
     """
 

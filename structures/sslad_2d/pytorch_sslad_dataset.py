@@ -1,7 +1,6 @@
-import pytorchscripts.transforms as Transforms
 import torch
+from torchvision.transforms import ToTensor
 
-from structures.penn_fudan_ped.penn_fudan_dataset import PennFudanDataset
 from structures.sslad_2d.sslad_dataset import SSLADDataset
 
 
@@ -24,8 +23,6 @@ class PyTorchSSLADDataset():
             self.images = self.dataset.training_images
         else:
             self.images = self.dataset.validation_images
-
-        self.transforms = PennFudanDataset.get_transform(train=False)
 
     def __len__(self):
         """
@@ -64,7 +61,7 @@ class PyTorchSSLADDataset():
         # Suppose all instances are not crowd
         target["iscrowd"] = torch.zeros((len(image_obj.annotations),), dtype=torch.int64)
 
-        return self.transforms(img, target)
+        return ToTensor()(img), target
 
     @staticmethod
     def sslad_to_pytorch(sslad_bbox):

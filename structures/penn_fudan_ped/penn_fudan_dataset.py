@@ -6,7 +6,7 @@ import os
 import torch
 from PIL import Image
 
-import pytorchscripts.transforms as Transforms
+import playground.pytorchscripts.transforms as Transforms
 
 
 class PennFudanDataset(object):
