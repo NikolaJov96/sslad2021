@@ -1,33 +1,25 @@
 import torch
 from torchvision.transforms import ToTensor
 
-from structures.sslad_2d.sslad_dataset import SSLADDataset
+from structures.sslad_2d.annotation import Annotation
 
 
-class PyTorchSSLADDataset():
+class DatasetWrapper():
     """
-    Class wrapping the SSLAD-2D dataset loader for use with PyTorch models
-    Allows access to the training and validation sets of labeled images
+    Wraps a list of Image objects with annotations for use with PyTorch models
     """
 
-    def __init__(self, train):
+    def __init__(self, images):
         """
-        Initialize the underlining dataset
+        Initialize the images list
         """
 
-        self.dataset = SSLADDataset()
-        self.dataset.load()
+        self.images = images
 
-        self.train = train
-        self.images = []
-        if self.train:
-            self.images = self.dataset.training_images
-        else:
-            self.images = self.dataset.validation_images
 
     def __len__(self):
         """
-        Return the len of selected part of the dataset
+        Return the length of the images list
         """
 
         return len(self.images)
@@ -45,7 +37,7 @@ class PyTorchSSLADDataset():
         # Convert bboxes to the right format
         boxes = torch.as_tensor(
             [
-                PyTorchSSLADDataset.sslad_to_pytorch(annotation.get_array())
+                DatasetWrapper.sslad_to_pytorch(annotation.get_array())
                 for annotation in image_obj.annotations
             ],
             dtype=torch.float32
@@ -62,7 +54,30 @@ class PyTorchSSLADDataset():
         # Suppose all instances are not crowd
         target["iscrowd"] = torch.zeros((len(image_obj.annotations),), dtype=torch.int64)
 
-        return ToTensor()(img), target
+        return ToTensor()(img), target\
+
+    @staticmethod
+    def prediction_to_annotations(dataset, predictions):
+        """
+        Converts a list of PyTorch predictions to the list of Annotation objects
+        Needs an access to a dataset instance to find the appropriate category object
+        """
+
+        annotations = []
+
+        for prediction in predictions:
+
+            bboxes = prediction['boxes'].tolist()
+            labels = prediction['labels'].tolist()
+
+            annotations.append([
+                Annotation(
+                    dataset.categories[labels[i]],
+                    *DatasetWrapper.pytorch_to_sslad(bboxes[i])
+                ) for i in range(len(bboxes))
+            ])
+
+        return annotations
 
     @staticmethod
     def sslad_to_pytorch(sslad_bbox):
