@@ -54,7 +54,7 @@ class DatasetWrapper():
         # Suppose all instances are not crowd
         target["iscrowd"] = torch.zeros((len(image_obj.annotations),), dtype=torch.int64)
 
-        return ToTensor()(img), target\
+        return ToTensor()(img), target
 
     @staticmethod
     def prediction_to_annotations(dataset, predictions):

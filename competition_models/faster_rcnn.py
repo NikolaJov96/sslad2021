@@ -10,7 +10,6 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.transforms import transforms
 
 from competition_models.dataset_wrapper import DatasetWrapper
-from structures.sslad_2d.annotation import Annotation
 from structures.sslad_2d.image import Image
 from structures.sslad_2d.sslad_dataset import SSLADDataset
 
