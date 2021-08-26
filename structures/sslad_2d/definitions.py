@@ -5,9 +5,11 @@ class SSLADDatasetTypes(enum.Enum):
     """
     Enum containing existing dataset types
     """
+
     TRAINING = enum.auto()
     VALIDATION = enum.auto()
     TESTING = enum.auto()
+    UNLABELED = enum.auto()
 
 
 class Colors(enum.Enum):
