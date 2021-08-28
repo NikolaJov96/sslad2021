@@ -4,7 +4,7 @@ from torchvision.transforms import ToTensor
 from structures.sslad_2d.annotation import Annotation
 
 
-class DatasetWrapper():
+class DatasetWrapper:
     """
     Wraps a list of Image objects with annotations for use with PyTorch models
     """
@@ -15,7 +15,6 @@ class DatasetWrapper():
         """
 
         self.images = images
-
 
     def __len__(self):
         """
@@ -46,13 +45,14 @@ class DatasetWrapper():
         # Array with a label for each bbox
         labels = [annotation.category.category_id for annotation in image_obj.annotations]
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = torch.as_tensor(labels, dtype=torch.int64)
-        target["image_id"] = torch.as_tensor([idx])
-        target["area"] = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        # Suppose all instances are not crowd
-        target["iscrowd"] = torch.zeros((len(image_obj.annotations),), dtype=torch.int64)
+        target = {
+            "boxes": boxes,
+            "labels": torch.as_tensor(labels, dtype=torch.int64),
+            "image_id": torch.as_tensor([idx]),
+            "area": (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
+            # Suppose all instances are not crowd
+            "iscrowd": torch.zeros((len(image_obj.annotations),), dtype=torch.int64)
+        }
 
         return ToTensor()(img), target
 
@@ -104,3 +104,11 @@ class DatasetWrapper():
             pytorch_bbox[2] - pytorch_bbox[0],
             pytorch_bbox[3] - pytorch_bbox[1]
         ]
+
+    @staticmethod
+    def collate_fn(batch):
+        """
+        Function needed when creating a PyTorch data loaded over the dataset wrapper
+        The same lambda function can be used on Linux, but breaks on Windows
+        """
+        return tuple(zip(*batch))

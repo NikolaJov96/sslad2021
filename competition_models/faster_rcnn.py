@@ -14,7 +14,7 @@ from structures.sslad_2d.image import Image
 from structures.sslad_2d.sslad_dataset import SSLADDataset
 
 
-class FasterRCNN():
+class FasterRCNN:
     """
     General model class wrapping the PyTorch Faster RCNN
     """
@@ -60,7 +60,7 @@ class FasterRCNN():
             batch_size=2,
             shuffle=True,
             num_workers=1,
-            collate_fn=lambda batch: tuple(zip(*batch))
+            collate_fn=DatasetWrapper.collate_fn
         )
 
         # Construct an optimizer
@@ -136,7 +136,7 @@ class FasterRCNN():
             return False
 
 
-if __name__ == '__main__':
+def main():
     """
     Execute the basic model training using the training set
     Show results on a few testing images
@@ -185,3 +185,7 @@ if __name__ == '__main__':
             break
 
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()

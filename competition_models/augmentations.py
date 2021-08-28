@@ -89,7 +89,7 @@ class FlipImage(Augmentation):
         return img.transpose(method=PILImage.FLIP_LEFT_RIGHT)
 
 
-if __name__ == '__main__':
+def main():
     """
     Show augmentations on one training set image
     """
@@ -114,9 +114,8 @@ if __name__ == '__main__':
 
         augmented_image = deepcopy(image)
         augmented_image.add_augmentation(augmentation)
-        augmented_img = augmented_image.get_cv2_img()
+        augmented_img = augmented_image.draw_annotations()
 
-        resized_img = Image.resize_to_width(augmented_img, 1000)
         cv2.imshow(window_name, Image.resize_to_width(augmented_img, 1000))
 
         # Exit on esc
@@ -124,3 +123,7 @@ if __name__ == '__main__':
             exit(0)
 
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()

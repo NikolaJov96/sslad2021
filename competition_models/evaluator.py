@@ -31,7 +31,7 @@ class Evaluator:
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=1,
-            collate_fn=lambda batch: tuple(zip(*batch))
+            collate_fn=DatasetWrapper.collate_fn
         )
 
         # Execute the time-consuming dataset conversion
@@ -120,7 +120,7 @@ class Evaluator:
         m = parameters.maxDets.index(100)
 
         # Evaluation results per category
-        results = [-1] * 7
+        results = [-1.0] * 7
 
         # For each encountered category
         for k_i in range(counts[2]):
@@ -140,7 +140,7 @@ class Evaluator:
             per_recall_precision = precision[t, :, k_i, a, m]
 
             # Get the mean for all recall values
-            ap = np.mean(per_recall_precision[per_recall_precision >- 1])
+            ap = np.mean(per_recall_precision[per_recall_precision > -1])
 
             results[k] = ap
 
@@ -151,7 +151,7 @@ class Evaluator:
         return results, coco_evaluator
 
 
-if __name__ == '__main__':
+def main():
     """
     Try out the evaluator on the default model saved after running faster_rcnn.py
     and the default validation set
@@ -255,5 +255,9 @@ if __name__ == '__main__':
     for k_i in range(counts[2]):
         k = parameters.catIds[k_i]
         s = precision[t, :, k - 1, a_ind, m_ind]
-        mean_s = np.mean(s[s>-1])
+        mean_s = np.mean(s[s > -1])
         print(dataset.categories[k].name, mean_s)
+
+
+if __name__ == '__main__':
+    main()
