@@ -3,8 +3,6 @@ import cv2
 import os
 from PIL import Image as PILImage
 
-from competition_models.augmentations import Augmentation
-
 
 class Image:
     """
@@ -45,9 +43,8 @@ class Image:
             copy.copy(annotation) for annotation in self.annotations
         ]
         # Retain same references to augmentation objects
-        new_image.augmentations = self.augmentations
+        new_image.augmentations = list(self.augmentations)
         return new_image
-
 
     def add_annotation(self, annotation):
         """
@@ -73,10 +70,6 @@ class Image:
         """
         Adds a new augmentation function or lambda to be applied on image when loaded
         """
-
-        if not isinstance(augmentation, Augmentation):
-            print('Image.add_augmentation expects an Augmentation, received {}'.format(type(augmentation)))
-            exit(1)
 
         augmentation.apply_to_image_parameters(self)
         self.augmentations.append(augmentation)

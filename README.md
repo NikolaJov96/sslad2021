@@ -22,10 +22,8 @@ Explore the dataset by running scripts inside the `exploring_data/` directory.
 
 ```
 python3 exploring_data/display_training_bbox.py
-```
-
-```
 python3 exploring_data/bbox_distribution.py
+python3 exploring_data/lighting.py
 ```
 
 ## Warm-up experiments
@@ -55,3 +53,11 @@ python3 competition_models/evaluator.py
 ```
 
 As per competition rules, evaluator is calculating average precisions (AP) using the COCO evaluation API for every category, as well as the mean average precision(mAP). Calculation of mAP is custom, as different categories have different IoU thresholds. Results are returned as a list [mAP, AP1, ..., AP6].
+
+### Data Augmentation
+
+Different augmentations can be applied to image instances. Those can found in `competition_models/augmentations.py`. To preview them, run:
+
+```
+python3 competition_models/augmentations.py
+```

@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+from copy import deepcopy
 from PIL import Image as PILImage
 
 
@@ -32,6 +32,7 @@ class Augmentation:
 
         return img
 
+
 class ScaleBrightness(Augmentation):
     """
     Simple pixel value scaling with a given coefficient
@@ -44,7 +45,6 @@ class ScaleBrightness(Augmentation):
         super().__init__()
 
         self.coefficient = coefficient
-
 
     def apply_to_cv2_img(self, img):
         """
@@ -59,6 +59,7 @@ class ScaleBrightness(Augmentation):
         """
 
         return PILImage.eval(img, lambda p: p * self.coefficient)
+
 
 class FlipImage(Augmentation):
     """
@@ -86,3 +87,40 @@ class FlipImage(Augmentation):
         """
 
         return img.transpose(method=PILImage.FLIP_LEFT_RIGHT)
+
+
+if __name__ == '__main__':
+    """
+    Show augmentations on one training set image
+    """
+
+    from structures.sslad_2d.image import Image
+    from structures.sslad_2d.sslad_dataset import SSLADDataset
+
+    dataset = SSLADDataset()
+    dataset.load()
+    image = dataset.training_images[0]
+
+    augmentations = [
+        Augmentation(),
+        ScaleBrightness(0.5),
+        FlipImage()
+    ]
+
+    window_name = 'Augmentations'
+    cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+
+    for augmentation in augmentations:
+
+        augmented_image = deepcopy(image)
+        augmented_image.add_augmentation(augmentation)
+        augmented_img = augmented_image.get_cv2_img()
+
+        resized_img = Image.resize_to_width(augmented_img, 1000)
+        cv2.imshow(window_name, Image.resize_to_width(augmented_img, 1000))
+
+        # Exit on esc
+        if cv2.waitKey(0) == 27:
+            exit(0)
+
+    cv2.destroyAllWindows()
