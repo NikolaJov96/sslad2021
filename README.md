@@ -4,9 +4,17 @@ Entry for ICCV 2021 Workshop: Self-supervised Learning for Next-Generation Indus
 
 ## Getting the data
 
-Datasets used for all experiments are placed in subfolders under `data/`. Dataset loader classes are placed in subfolders under `structures/` for each dataset.
+Datasets used for all experiments are placed in subfolders under `data/`.
 
 Download the provided main competition dataset from [here](https://soda-2d.github.io/documentation.html), and place the extracted data into `data/SSLAD-2D/` directory, so it can be found by the dataset loader.
+
+Dataset loader classes are placed in subfolders under `structures/` for each dataset. SSLAD dataset loader assumes training, testing and validation datasets are downloaded (~6GB), but does not require any unlabeled data to work correctly.
+
+To test if the SSLAD dataset loader loads the downloaded data correctly, run:
+
+```
+python3 structures/sslad_2d/sslad_dataset.py
+```
 
 ## Exploring the data
 
@@ -46,4 +54,4 @@ Evaluation script can be tested on the model created by the script above by runn
 python3 competition_models/evaluator.py
 ```
 
-As per competition rules, evaluator is calculating average precisions (AP) using the COCO evaluation API for every category, as well as the mean average precision(mAP). With different categories have specific IoU thresholds. Results are returned as a list [mAP, AP1, ..., AP6].
+As per competition rules, evaluator is calculating average precisions (AP) using the COCO evaluation API for every category, as well as the mean average precision(mAP). Calculation of mAP is custom, as different categories have different IoU thresholds. Results are returned as a list [mAP, AP1, ..., AP6].

@@ -1,3 +1,4 @@
+from abc import abstractproperty
 import json
 import os
 
@@ -31,6 +32,15 @@ Annotation file structure:
         "name": <str> -- Unique category name.
         "id": <int> Unique category id.
         "supercategory": <str> The supercategory for this category.}
+
+Prediction output file structure:
+
+{
+        "image_id": <int> -- The image id for this annotation.
+        "category_id": <int> -- The category id.
+        "bbox": <list> -- Coordinate of boundingbox [x, y, w, h].
+        "score": <float> -- Prediction confidence
+}
 """
 
 
@@ -67,7 +77,7 @@ class SSLADDataset:
         self.image_width = 0
         self.image_height = 0
 
-    def load(self):
+    def load(self, test_data_file=None, unlabeled_data_file=None):
         """
         Load dataset json descriptor files and store their data in structured from
         """
@@ -87,37 +97,41 @@ class SSLADDataset:
         training_images_map = {}
         validation_images_map = {}
         testing_images_map = {}
+        unlabeled_images_map = {}
 
         # Initialize training images
         for image in training_data['images']:
             training_images_map[image['id']] = Image(
-                SSLADDataset.TRAINING_IMAGES_PATH, image, SSLADDatasetTypes.TRAINING)
+                SSLADDataset.TRAINING_IMAGES_PATH, image, SSLADDatasetTypes.TRAINING
+            )
 
         # Initialize training annotations
         for annotation in training_data['annotations']:
             training_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
-                self.categories[annotation['category_id']], annotation))
+                self.categories[annotation['category_id']], annotation
+            ))
 
         # Initialize validation images
         for image in validation_data['images']:
             validation_images_map[image['id']] = Image(
-                SSLADDataset.VALIDATION_IMAGES_PATH, image, SSLADDatasetTypes.VALIDATION)
+                SSLADDataset.VALIDATION_IMAGES_PATH, image, SSLADDatasetTypes.VALIDATION
+            )
 
         # Initialize validation annotations
         for annotation in validation_data['annotations']:
             validation_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
-                self.categories[annotation['category_id']], annotation))
-
-        # Move values from temporary maps to lists
-        # Skip any images with no annotations in training and validation sets
-        self.training_images = [image for image in training_images_map.values() if len(image.annotations) > 0]
-        self.validation_images = [image for image in validation_images_map.values() if len(image.annotations) > 0]
-        self.testing_images = list(testing_images_map.values())
+                self.categories[annotation['category_id']], annotation
+            ))
 
         # Initialize testing images
         for image in testing_data['images']:
-            self.testing_images.append(Image(
-                SSLADDataset.TESTING_IMAGES_PATH, image, SSLADDatasetTypes.TESTING))
+            testing_images_map[image['id']] = Image(
+                SSLADDataset.TESTING_IMAGES_PATH, image, SSLADDatasetTypes.TESTING
+            )
+
+        # Load testing images annotations if load file provided
+        if test_data_file is not None:
+            self.load_predictions(testing_images_map, test_data_file)
 
         # Initialize unlabeled images
         # Try to load all 10 unlabeled image batches
@@ -127,7 +141,20 @@ class SSLADDataset:
                 with open(descriptor_file) as in_file:
                     unlabeled_data = json.load(in_file)
                 for image in unlabeled_data:
-                    self.unlabeled_images.append(Image(SSLADDataset.DATA_PATH, image, SSLADDatasetTypes.UNLABELED))
+                    unlabeled_images_map[image['id']] = Image(
+                        SSLADDataset.DATA_PATH, image, SSLADDatasetTypes.UNLABELED
+                    )
+
+        # Load validation images annotations if load file provided
+        if unlabeled_data_file is not None:
+            self.load_predictions(unlabeled_images_map, unlabeled_data_file)
+
+        # Move values from temporary maps to lists
+        # Skip any images with no annotations in training and validation sets
+        self.training_images = [image for image in training_images_map.values() if len(image.annotations) > 0]
+        self.validation_images = [image for image in validation_images_map.values() if len(image.annotations) > 0]
+        self.testing_images = list(testing_images_map.values())
+        self.unlabeled_images = list(unlabeled_images_map.values())
 
         # Set image width and height parameters
         image = self.training_images[0]
@@ -150,6 +177,57 @@ class SSLADDataset:
         else:
             return []
 
+    def save_test_predictions(self, test_data_file):
+        """
+        Saves annotations assigned to testing images
+        """
+
+        SSLADDataset.save_predictions(self.testing_images, test_data_file)
+
+    def save_unlabeled_predictions(self, unlabeled_data_file):
+        """
+        Saves annotations assigned to unlabeled images
+        """
+
+        SSLADDataset.save_predictions(self.unlabeled_images, unlabeled_data_file)
+
+    @staticmethod
+    def save_predictions(images, data_file):
+        """
+        Saves annotations assigned to received images
+        """
+
+        save_data = []
+        for image in images:
+            if image.is_annotated:
+                for annotation in image.annotations:
+                    save_data.append({
+                        'image_id': image.image_id,
+                        'category_id': annotation.category.category_id,
+                        'bbox': annotation.get_array(),
+                        'score': annotation.score
+                    })
+
+        with open(data_file, 'w') as out_file:
+            json.dump(save_data, out_file)
+
+    def load_predictions(self, images_map, data_file):
+        """
+        Loads saved predicted annotations for testing or unlabeled subsets
+        """
+
+        if data_file is not None:
+            # Load predictions file
+            with open(data_file, 'r') as in_file:
+                testing_prediction_data = json.load(in_file)
+            # Add annotations to images
+            for annotation in testing_prediction_data:
+                images_map[annotation['image_id']].add_annotation(Annotation(
+                    self.categories[annotation['category_id']],
+                    annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3],
+                    annotation['score']
+                ))
+
 
 if __name__ == '__main__':
     """
@@ -159,22 +237,23 @@ if __name__ == '__main__':
     dataset = SSLADDataset()
     dataset.load()
 
-    print('Categories')
+    print('categories')
     categories = [
         (category_id, dataset.categories[category_id].name, dataset.categories[category_id].get_color())
-        for category_id in dataset.categories]
+        for category_id in dataset.categories
+    ]
     print(categories)
 
     training_annotation_counts = [len(image.annotations) for image in dataset.training_images]
     validation_annotation_counts = [len(image.annotations) for image in dataset.validation_images]
     testing_annotation_counts = [len(image.annotations) for image in dataset.testing_images]
-    print('Training images: {}'.format(len(dataset.training_images)))
-    print('Average annotations per image: {}'.format(sum(training_annotation_counts) / len(training_annotation_counts)))
-    print('Validation images: {}'.format(len(dataset.validation_images)))
-    print('Average annotations per image: {}'.format(
+    print('training images: {}'.format(len(dataset.training_images)))
+    print('average annotations per image: {}'.format(sum(training_annotation_counts) / len(training_annotation_counts)))
+    print('validation images: {}'.format(len(dataset.validation_images)))
+    print('average annotations per image: {}'.format(
         sum(validation_annotation_counts) / len(validation_annotation_counts)))
-    print('Testing images: {}'.format(len(dataset.testing_images)))
-    print('Unlabeled images: {}'.format(len(dataset.unlabeled_images)))
+    print('testing images: {}'.format(len(dataset.testing_images)))
+    print('unlabeled images: {}'.format(len(dataset.unlabeled_images)))
 
     assert len(categories) > 0
     assert len(dataset.training_images) > 0
@@ -188,4 +267,42 @@ if __name__ == '__main__':
     assert len([image for image in dataset.training_images if len(image.annotations) == 0]) == 0
     assert len([image for image in dataset.validation_images if len(image.annotations) == 0]) == 0
 
-    print('Tests passed')
+    # Test prediction saving and loading
+    import pathlib
+
+    # Add one annotation
+    dataset.testing_images[0].add_annotation(Annotation(
+        dataset.categories[1], 10, 20, 30, 40, 0.1
+    ))
+
+    # Save annotations
+    save_folder = os.path.join(pathlib.Path(__file__).parent.resolve(), 'test_saves')
+    if not os.path.isdir(save_folder):
+        os.mkdir(save_folder)
+    test_data_file = os.path.join(save_folder, 'test_predictions.json')
+    dataset.save_test_predictions(test_data_file)
+
+    # Same procedure for unlabeled data if it exists
+    unlabeled_data_file = None
+    unlabeled_data_exists = len(dataset.unlabeled_images) > 0
+    if unlabeled_data_exists:
+        dataset.unlabeled_images[1].add_annotation(Annotation(
+            dataset.categories[2], 100, 200, 300, 400, 0.9
+        ))
+        unlabeled_data_file = os.path.join(save_folder, 'unlabeled_predictions.json')
+        dataset.save_unlabeled_predictions(unlabeled_data_file)
+
+    # Reload saved annotations
+    dataset = SSLADDataset()
+    dataset.load(test_data_file=test_data_file, unlabeled_data_file=unlabeled_data_file)
+
+    assert len(dataset.testing_images[0].annotations) == 1
+    print('saved test annotation')
+    print(dataset.testing_images[0].annotations[0])
+
+    if unlabeled_data_exists:
+        assert len(dataset.unlabeled_images[1].annotations) == 1
+        print('saved unlabeled annotation')
+        print(dataset.unlabeled_images[1].annotations[0])
+
+    print('tests passed')

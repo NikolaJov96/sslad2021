@@ -4,6 +4,9 @@
 # Saved pytorch models
 *.pt
 
+# Saved annotation data
+*.json
+
 # Python cache
 *.pyc
 

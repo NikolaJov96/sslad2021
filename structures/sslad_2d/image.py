@@ -15,9 +15,11 @@ class Image:
         """
 
         self.file_name = os.path.join(image_path_prefix, image_data['file_name'])
+        self.image_id = image_data['id']
         self.height = image_data['height']
         self.width = image_data['width']
         self.dataset_type = dataset_type
+        self.is_annotated = False
         self.annotations = []
 
     def add_annotation(self, annotation):
@@ -26,6 +28,19 @@ class Image:
         """
 
         self.annotations.append(annotation)
+        self.is_annotated = True
+
+    def add_annotations(self, annotations):
+        """
+        Concatenates list of annotations to the image annotations
+        """
+
+        if not isinstance(annotations, list):
+            print('Image.add_annotations expects a list, received {}'.format(type(annotations)))
+            exit(1)
+
+        self.annotations += annotations
+        self.is_annotated = True
 
     def get_cv2_img(self):
         """

@@ -3,7 +3,7 @@ class Annotation:
     Represents a single bounding box annotation
     """
 
-    def __init__(self, category, x, y, w, h):
+    def __init__(self, category, x, y, w, h, score=1.0):
         """
         Initializes annotation description
         """
@@ -14,6 +14,16 @@ class Annotation:
         self.w = w
         self.h = h
         self.area = w * h
+        self.score = score
+
+    def __str__(self):
+        """
+        Annotation string representation for debugging
+        """
+
+        return '{}: x={} y={} w={} h={} score={}'.format(
+            self.category.name, self.x, self.y, self.w, self.h, self.score
+        )
 
     def get_array(self):
         """
