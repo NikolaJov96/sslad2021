@@ -1,6 +1,9 @@
+import copy
 import cv2
 import os
 from PIL import Image as PILImage
+
+from competition_models.augmentations import Augmentation
 
 
 class Image:
@@ -21,6 +24,30 @@ class Image:
         self.dataset_type = dataset_type
         self.is_annotated = False
         self.annotations = []
+        self.augmentations = []
+
+    def __deepcopy__(self, memo):
+        """
+        Make a deep copy of an image, making sure that altering one does not affect the other
+        """
+
+        new_image = Image.__new__(Image)
+        memo[id(self)] = new_image
+
+        new_image.file_name = self.file_name
+        new_image.image_id = self.image_id
+        new_image.height = self.height
+        new_image.width = self.width
+        new_image.dataset_type = self.dataset_type
+        new_image.is_annotated = self.is_annotated
+        # Copy each annotation data, retaining shallow references to the category objects
+        new_image.annotations = [
+            copy.copy(annotation) for annotation in self.annotations
+        ]
+        # Retain same references to augmentation objects
+        new_image.augmentations = self.augmentations
+        return new_image
+
 
     def add_annotation(self, annotation):
         """
@@ -42,19 +69,37 @@ class Image:
         self.annotations += annotations
         self.is_annotated = True
 
+    def add_augmentation(self, augmentation):
+        """
+        Adds a new augmentation function or lambda to be applied on image when loaded
+        """
+
+        if not isinstance(augmentation, Augmentation):
+            print('Image.add_augmentation expects an Augmentation, received {}'.format(type(augmentation)))
+            exit(1)
+
+        augmentation.apply_to_image_parameters(self)
+        self.augmentations.append(augmentation)
+
     def get_cv2_img(self):
         """
         Loads the image content from file if not already loaded and returns it in OpenCV format
         """
 
-        return cv2.imread(self.file_name)
+        img = cv2.imread(self.file_name)
+        for augmentation in self.augmentations:
+            img = augmentation.apply_to_cv2_img(img)
+        return img
 
     def get_pil_img(self):
         """
         Loads the image content from file if not already loaded and returns it in PIL format
         """
 
-        return PILImage.open(self.file_name).convert("RGB")
+        img = PILImage.open(self.file_name).convert("RGB")
+        for augmentation in self.augmentations:
+            img = augmentation.apply_to_pil_img(img)
+        return img
 
     def draw_annotations(self, annotations=None, output_file=None):
         """
