@@ -54,7 +54,7 @@ class Evaluator:
         }
 
     @torch.no_grad()
-    def evaluate(self, model, device, verbose=False):
+    def evaluate(self, model, verbose=False):
         """
         Execute the evaluation and return the APs and mAP as used in the competition
         """
@@ -75,7 +75,7 @@ class Evaluator:
                 print('batch {} / {}\r'.format(batch, self.total_batches), end='')
 
             # Get predictions from images
-            images = list(img.to(device) for img in images)
+            images = list(img.to(model.device) for img in images)
             outputs = model(images)
 
             # Convert predictions to coco evaluator structure
@@ -106,9 +106,9 @@ class Evaluator:
 
         # Calculate competition-specific metrics
 
-        # Get the parematers object descripting the structure of the 5D precision array
+        # Get the parameters object describing the structure of the 5D precision array
         parameters = coco_evaluator.coco_eval['bbox'].eval['params']
-        # Get the counts array representing the dimensions of the precions parray
+        # Get the counts array representing the dimensions of the precisions array
         counts = coco_evaluator.coco_eval['bbox'].eval['counts']
         # Get the precision array
         precision = coco_evaluator.coco_eval['bbox'].eval['precision']
@@ -180,7 +180,7 @@ def main():
     evaluate_untrained = False
     if evaluate_untrained:
         print('Untrained model results')
-        print(evaluator.evaluate(model.model, model.device)[0])
+        print(evaluator.evaluate(model.model)[0])
         print()
 
     # Model save file
@@ -193,7 +193,7 @@ def main():
 
     # Evaluate trained model
     start_time = time.time()
-    results, coco_evaluator = evaluator.evaluate(model.model, model.device, verbose=True)
+    results, coco_evaluator = evaluator.evaluate(model.model, verbose=True)
     end_time = time.time()
     print('Trained model results')
     print(results)
