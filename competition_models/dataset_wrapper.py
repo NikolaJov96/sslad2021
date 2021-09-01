@@ -69,11 +69,13 @@ class DatasetWrapper:
 
             bboxes = prediction['boxes'].tolist()
             labels = prediction['labels'].tolist()
+            scores = prediction['scores'].tolist()
 
             annotations.append([
                 Annotation(
                     dataset.categories[labels[i]],
-                    *DatasetWrapper.pytorch_to_sslad(bboxes[i])
+                    *DatasetWrapper.pytorch_to_sslad(bboxes[i]),
+                    scores[i]
                 ) for i in range(len(bboxes))
             ])
 

@@ -21,6 +21,7 @@ class FasterRCNN:
 
     # Background + 6 object classes = 7 classes
     NUM_CLASSES = 7
+    BATCH_SIZE = 2
 
     def __init__(self):
         """
@@ -57,7 +58,7 @@ class FasterRCNN:
 
         data_loader = torch.utils.data.DataLoader(
             dataset,
-            batch_size=2,
+            batch_size=FasterRCNN.BATCH_SIZE,
             shuffle=True,
             num_workers=1,
             collate_fn=DatasetWrapper.collate_fn
@@ -88,7 +89,11 @@ class FasterRCNN:
                 losses = sum(loss for loss in loss_dict.values())
 
                 loss_value = losses.item()
-                print('epoch: {}, batch: {}, loss: {}'.format(epoch, batch, loss_value))
+                print('\repoch: {}/{}, batch: {}/{}, loss: {}'.format(
+                        epoch + 1, num_epochs, batch + 1, len(dataset) // FasterRCNN.BATCH_SIZE, loss_value
+                    ),
+                    end=''
+                )
 
                 if not math.isfinite(loss_value):
                     print("loss is {}, stopping training".format(loss_value))
@@ -103,6 +108,8 @@ class FasterRCNN:
 
                 # Update the model weights
                 optimizer.step()
+
+            print()
 
             # Update the learning rate
             lr_scheduler.step()

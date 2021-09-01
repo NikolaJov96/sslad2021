@@ -64,7 +64,7 @@ class Evaluator:
         cpu_device = torch.device('cpu')
 
         # Put model into evaluation mode
-        model.eval()
+        model.model.eval()
 
         # Initialize the coco evaluator
         iou_types = ['bbox']
@@ -75,8 +75,8 @@ class Evaluator:
                 print('batch {} / {}\r'.format(batch, self.total_batches), end='')
 
             # Get predictions from images
-            images = list(img.to(model.device) for img in images)
-            outputs = model(images)
+            cuda_images = list(img.to(model.device) for img in images)
+            outputs = model.model(cuda_images)
 
             # Convert predictions to coco evaluator structure
             outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
@@ -177,10 +177,10 @@ def main():
     model = FasterRCNN()
 
     # Evaluate untrained model
-    evaluate_untrained = False
+    evaluate_untrained = True
     if evaluate_untrained:
-        print('Untrained model results')
-        print(evaluator.evaluate(model.model)[0])
+        print('untrained model results')
+        print(evaluator.evaluate(model)[0])
         print()
 
     # Model save file
@@ -193,9 +193,9 @@ def main():
 
     # Evaluate trained model
     start_time = time.time()
-    results, coco_evaluator = evaluator.evaluate(model.model, verbose=True)
+    results, coco_evaluator = evaluator.evaluate(model, verbose=True)
     end_time = time.time()
-    print('Trained model results')
+    print('trained model results')
     print(results)
     print()
 

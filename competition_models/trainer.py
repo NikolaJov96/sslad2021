@@ -14,7 +14,7 @@ Algorithm:
 
 - Predict annotations for unlabeled data batches 0, 1 and 2
 - Save dataset state as annotations_1
-- Train model_0 with unlabeled batch 0, then with training set to get model_1_0 
+- Train model_0 with unlabeled batch 0, then with training set to get model_1_0
 - Train model_0 with unlabeled batch 1, then with training set to get model_1_1
 - Train model_0 with unlabeled batch 2, then with training set to get model_1_2
 - Evaluate all 3 on the validation set
@@ -24,18 +24,18 @@ Algorithm:
 - Save dataset state as annotations_2
 - Train model_1 with batch x, then batch 3, then with training set to get model_2_0
 - Train model_1 with batch x, then batch 4, then with training set to get model_2_1
-- Train model_1 with batch x, then batch 5, then with training set to get model_2_2 
+- Train model_1 with batch x, then batch 5, then with training set to get model_2_2
 - Evaluate all 3 on the validation set
 - The best performing model, corresponding to the batch y becomes model_2
 
 Log file content:
 {
     "unlabeled_base": <list> -- Unlabeled batch ids used for all training
-    "unlabeled_tested": 
+    "unlabeled_tested":
     {
         "unlabeled_id": <int> -- Id of additional unlabeled training batch
         "training_time": <float> -- Training time in seconds
-        "evaluation_time": <float> -- Evaluation time in seconds 
+        "evaluation_time": <float> -- Evaluation time in seconds
         "evaluation": <list> -- Evaluator output
     }
 }
@@ -105,6 +105,8 @@ class Trainer:
         """
         """
 
+        print('training initial model')
+
         dataset = SSLADDataset()
         dataset.load()
 
@@ -118,8 +120,10 @@ class Trainer:
 
         model.save_model(self.model_path(0))
 
+        print('evaluating initial model')
+
         evaluation_start = time.time()
-        result = self.evaluator.evaluate(model)
+        result, _ = self.get_evaluator().evaluate(model)
         evaluation_end = time.time()
 
         log = {
@@ -136,29 +140,9 @@ class Trainer:
 
         iteration = len(self.iteration_logs) + 1
 
-        dataset = SSLADDataset()
-        if iteration > 1:
-            dataset.load(unlabeled_data_file=self.annotation_path(iteration - 1))
-        else:
-            dataset.load()
+        dataset = self.execute_iteration_prediction(iteration)
 
-        for unlabeled_batch in range(Trainer.BATCHES_IN_ITERATION):
-
-            # Load latest model
-            model = self.load_best_model(iteration - 1)
-
-            unlabeled_image_ids = [
-                (iteration - 1) * Trainer.BATCHES_IN_ITERATION * Trainer.UNLABELED_BATCH + i
-                for i in range(Trainer.BATCHES_IN_ITERATION)
-            ]
-
-            for unlabeled_image_id in unlabeled_image_ids:
-                predictions = model.eval(dataset.unlabeled_images[unlabeled_image_id].get_pil_img())
-                annotations = DatasetWrapper.prediction_to_annotations(dataset, predictions)[0]
-                dataset.unlabeled_images[unlabeled_image_id].add_annotations(annotations)
-
-        dataset.save_unlabeled_predictions(self.annotation_path(iteration))
-
+        """
         base_unlabeled_batches = self.get_base_unlabeled_training_data(iteration)
 
         new_unlabeled_batches = [
@@ -176,7 +160,55 @@ class Trainer:
 
             # Load latest model
             model = self.load_best_model(iteration - 1)
+        """
 
+    def execute_iteration_prediction(self, iteration):
+        """
+        """
+
+        print('predicting iteration {}'.format(iteration))
+
+        dataset = SSLADDataset()
+
+        # Check if current iteration has saved prediction data before by trying to load it
+        try:
+            dataset.load(unlabeled_data_file=self.annotation_path(iteration))
+            print('found saved annotations file for this iteration')
+        except FileNotFoundError:
+            # No file found
+            if iteration == 1:
+                # For the first iteration there is no history data
+                dataset.load()
+            else:
+                # For later iterations, load previous iteration annotations
+                dataset.load(unlabeled_data_file=self.annotation_path(iteration - 1))
+
+            for unlabeled_batch in range(Trainer.BATCHES_IN_ITERATION):
+
+                # Load latest model
+                model = self.load_best_model(iteration - 1)
+
+                unlabeled_image_ids = [
+                    (iteration - 1) * Trainer.BATCHES_IN_ITERATION * Trainer.UNLABELED_BATCH +
+                        unlabeled_batch * Trainer.UNLABELED_BATCH + i
+                    for i in range(Trainer.UNLABELED_BATCH)
+                ]
+
+                for id, unlabeled_image_id in enumerate(unlabeled_image_ids):
+                    if (id * 100) % Trainer.UNLABELED_BATCH == 0:
+                        print('\rprediction unlabeled batch {}, image {}/{}'.format(
+                                unlabeled_batch, id, Trainer.UNLABELED_BATCH
+                            ),
+                            end=''
+                        )
+                    predictions = model.eval([dataset.unlabeled_images[unlabeled_image_id].get_pil_img()])
+                    annotations = DatasetWrapper.prediction_to_annotations(dataset, predictions)[0]
+                    dataset.unlabeled_images[unlabeled_image_id].add_annotations(annotations)
+                print()
+
+            dataset.save_unlabeled_predictions(self.annotation_path(iteration))
+
+        return dataset
 
     def get_base_unlabeled_training_data(self, iteration):
         """
@@ -248,7 +280,7 @@ class Trainer:
         """
         """
 
-        return os.path.join(self.model_dir, 'annotation_{}'.format(iteration))
+        return os.path.join(self.annotation_dir, 'annotation_{}.json'.format(iteration))
 
 
 def main():
@@ -264,6 +296,8 @@ def main():
 
     work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(training_session))
     trainer = Trainer(work_dir)
+
+    trainer.train_iteration()
 
 
 if __name__ == '__main__':
