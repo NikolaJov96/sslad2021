@@ -26,6 +26,20 @@ python3 exploring_data/bbox_distribution.py
 python3 exploring_data/lighting.py
 ```
 
+During training, Trainer executes predictions on unlabeled data and saves them to annotation files. Following scripts are specific to analyzing prediction outputs from the trainer.
+
+To display all predicted annotations run `display_annotations.py`, providing the annotation save file and a starting image id:
+
+```
+python3 exploring_data/trainer_predictions/display_annotations.py ./competition_models/<session>/annotations/annotation_1.json 0
+```
+
+To display predicted annotations with their confidence scores, one by one, run `display_annotation_scores.py`, providing the annotation save file and a starting image id:
+
+```
+python3 exploring_data/trainer_predictions/display_annotation_scores.py ./competition_models/<session>/annotations/annotation_1.json 0
+```
+
 ## Warm-up experiments
 
 Warm-up experiments used to get familiar with the competition topic can be found in `playground/` along with a README with more information on them.
@@ -61,3 +75,5 @@ Different augmentations can be applied to image instances. Those can found in `c
 ```
 python3 competition_models/augmentations.py
 ```
+
+### Trainer algorithm
