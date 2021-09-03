@@ -40,6 +40,12 @@ To display predicted annotations with their confidence scores, one by one, run `
 python3 exploring_data/trainer_predictions/display_annotation_scores.py ./competition_models/<session>/annotations/annotation_1.json 0
 ```
 
+To display predicted annotations in different score confidence ranges, run `display_score_ranges.py`, providing the annotation save file, a starting image id and a score range step:
+
+```
+python3 exploring_data/trainer_predictions/display_score_ranges.py /media/nikola/DataDrive/sslad2021/competition_models/<session>/annotations/annotation_1.json 0 0.1
+```
+
 ## Warm-up experiments
 
 Warm-up experiments used to get familiar with the competition topic can be found in `playground/` along with a README with more information on them.
