@@ -32,12 +32,12 @@ Log file content:
 {
     "unlabeled_base": <list> -- Unlabeled batch ids used for all training
     "unlabeled_tested":
-    {
+    [{
         "unlabeled_id": <int> -- Id of additional unlabeled training batch
         "training_time": <float> -- Training time in seconds
         "evaluation_time": <float> -- Evaluation time in seconds
         "evaluation": <list> -- Evaluator output
-    }
+    }]
 }
 """
 
@@ -50,8 +50,10 @@ class Trainer:
     MODELS_SUBDIR = 'models'
     ANNOTATIONS_SUBDIR = 'annotations'
 
-    UNLABELED_BATCH = 3000
+    UNLABELED_BATCH = 30
     BATCHES_IN_ITERATION = 3
+    ORIGINAL_TRAINING_SET = 50
+    LIMIT_EVALUATION_TO_100 = False
 
     def __init__(self, work_dir):
         """
@@ -75,7 +77,7 @@ class Trainer:
         log_files = filter(lambda d: d.startswith('log'), os.listdir(self.log_dir))
         self.iteration_logs = []
         for log_file in log_files:
-            with open(log_file, 'r') as in_file:
+            with open(os.path.join(self.log_dir, log_file), 'r') as in_file:
                 self.iteration_logs.append(json.load(in_file))
 
     def get_evaluator(self):
@@ -83,11 +85,12 @@ class Trainer:
         """
 
         if self.evaluator is None:
-            validation_dataset = SSLADDataset()
-            validation_dataset.load()
-            validation_wrapper = DatasetWrapper(
-                validation_dataset.get_subset(SSLADDatasetTypes.VALIDATION)
-            )
+            dataset = SSLADDataset()
+            dataset.load()
+            validation_data = dataset.get_subset(SSLADDatasetTypes.VALIDATION)
+            if Trainer.LIMIT_EVALUATION_TO_100:
+                validation_data = validation_data[:100]
+            validation_wrapper = DatasetWrapper(validation_data)
             self.evaluator = Evaluator(validation_wrapper)
 
         return self.evaluator
@@ -97,8 +100,10 @@ class Trainer:
         """
 
         if os.path.exists(self.initial_log_path()):
+            # Train standard iteration, depending on previously trained models
             self.train_standard_iteration()
         else:
+            # Absence of initial log implies initial model training is not done
             self.train_initial_model()
 
     def train_initial_model(self):
@@ -107,29 +112,33 @@ class Trainer:
 
         print('training initial model')
 
+        # Prepare initial competition training set
         dataset = SSLADDataset()
         dataset.load()
+        dataset_wrapper = DatasetWrapper(images=dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET])
 
         model = FasterRCNN()
 
-        dataset_wrapper = DatasetWrapper(images=dataset.training_images)
-
+        # Train the model pretrained on ImageNet
+        print('training initial model')
         train_start = time.time()
         model.train(dataset=dataset_wrapper, num_epochs=10)
         train_end = time.time()
 
+        # Save the trained model
         model.save_model(self.model_path(0))
 
+        # Evaluate the initial model for later reference
         print('evaluating initial model')
-
         evaluation_start = time.time()
-        result, _ = self.get_evaluator().evaluate(model)
+        result, _ = self.get_evaluator().evaluate(model, verbose=True)
         evaluation_end = time.time()
 
+        # Save the training log
         log = {
             "training_time": train_end - train_start,
             "evaluation_time": evaluation_end - evaluation_start,
-            "result": result
+            "evaluation": result
         }
         with open(self.initial_log_path(), 'w') as out_file:
             json.dump(log, out_file)
@@ -140,27 +149,76 @@ class Trainer:
 
         iteration = len(self.iteration_logs) + 1
 
+        print('running iteration {}'.format(iteration))
+
+        # Get the dataset from the last iteration with additional annotations
+        # predictied using the model saved by the previous iteration
         dataset = self.execute_iteration_prediction(iteration)
 
-        """
         base_unlabeled_batches = self.get_base_unlabeled_training_data(iteration)
+        print('previous unlabeled batches used for training', base_unlabeled_batches)
 
         new_unlabeled_batches = [
-            iteration * Trainer.BATCHES_IN_ITERATION * Trainer.UNLABELED_BATCH + i
-            for i in range(Trainer.BATCHES_IN_ITERATION)
+            (iteration - 1) * Trainer.BATCHES_IN_ITERATION + i for i in range(Trainer.BATCHES_IN_ITERATION)
         ]
-        print('new unlabeled batch ids')
-        print(new_unlabeled_batches)
+        print('new unlabeled batch ids', new_unlabeled_batches)
 
         log = {
-            "unlabeled_tested": [dict() for _ in range(Trainer.BATCHES_IN_ITERATION)]
+            "unlabeled_base": [],
+            "unlabeled_tested": []
         }
 
-        for new_unlabeled_batch in new_unlabeled_batches:
+        for i, new_unlabeled_batch in enumerate(new_unlabeled_batches):
 
             # Load latest model
             model = self.load_best_model(iteration - 1)
-        """
+
+            # Prepare dataset wrapper for the current batch
+            # TODO: Add a selection of previously annotated unlabeled data to this set
+            dataset_images = dataset.unlabeled_images[
+                    new_unlabeled_batch * Trainer.UNLABELED_BATCH: (new_unlabeled_batch + 1) * Trainer.UNLABELED_BATCH
+                ]
+            dataset_images = [image for image in dataset_images if len(image.annotations) > 0]
+            print('images after filtering', len(dataset_images))
+            dataset_wrapper = DatasetWrapper(images=dataset_images)
+
+            # Train the model saved by the last iteration
+            train_start = time.time()
+            # Train with unlabeled data
+            print('iteration {}, batch {}, unlabeled training'.format(iteration, i))
+            model.train(dataset=dataset_wrapper, num_epochs=5)
+            # Train with original training data
+            print('iteration {}, batch {}, original data training'.format(iteration, i))
+            model.train(dataset=DatasetWrapper(
+                    images=dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
+                ),
+                num_epochs=5
+            )
+            train_end = time.time()
+
+            # Save the trained model
+            model.save_model(self.model_path(iteration, sub_model=i))
+
+            # Evaluate the model for comparison with other models in this iteration
+            print('iteration {}, batch {}, evaluation'.format(iteration, i))
+            # Get and potentially initialize the evaluator before starting to count the time
+            evaluator = self.get_evaluator()
+            evaluation_start = time.time()
+            result, _ = evaluator.evaluate(model, verbose=True)
+            evaluation_end = time.time()
+
+            # Add results of this batch to the iteration log
+            log["unlabeled_tested"].append({
+                "unlabeled_id": i,
+                "training_time": train_end - train_start,
+                "evaluation_time": evaluation_end - evaluation_start,
+                "evaluation": result
+            })
+
+        # Save the iteration log
+        with open(self.log_path(iteration), 'w') as out_file:
+            json.dump(log, out_file)
+
 
     def execute_iteration_prediction(self, iteration):
         """
@@ -214,7 +272,7 @@ class Trainer:
         """
         """
 
-        if iteration == 0:
+        if iteration == 1:
             return []
         else:
             base_unlabeled_training_data = self.iteration_logs[iteration - 1]['unlabeled_base']
@@ -236,7 +294,7 @@ class Trainer:
         else:
             # Load the best model from the last iteration
             best_sub_model_id = self.get_best_sub_model_id(iteration)
-            print('best model id: {}'.format(best_sub_model_id))
+            print('iteration {} best model id: {}'.format(iteration, best_sub_model_id))
 
             model.load_model(self.model_path(iteration, best_sub_model_id))
 
@@ -250,8 +308,7 @@ class Trainer:
 
         latest_log = self.iteration_logs[iteration - 1]
         results = [x['evaluation'][0] for x in latest_log['unlabeled_tested']]
-        print('last iteration results')
-        print(results)
+        print('last iteration results', results)
         return results.index(max(results))
 
 
