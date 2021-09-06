@@ -50,9 +50,9 @@ class Trainer:
     MODELS_SUBDIR = 'models'
     ANNOTATIONS_SUBDIR = 'annotations'
 
-    UNLABELED_BATCH = 30
+    UNLABELED_BATCH = 3000
     BATCHES_IN_ITERATION = 3
-    ORIGINAL_TRAINING_SET = 50
+    ORIGINAL_TRAINING_SET = 5000
     LIMIT_EVALUATION_TO_100 = False
 
     def __init__(self, work_dir):
@@ -216,6 +216,7 @@ class Trainer:
             })
 
         # Save the iteration log
+        self.iteration_logs.append(log)
         with open(self.log_path(iteration), 'w') as out_file:
             json.dump(log, out_file)
 
@@ -354,7 +355,8 @@ def main():
     work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(training_session))
     trainer = Trainer(work_dir)
 
-    trainer.train_iteration()
+    for _ in range(10):
+        trainer.train_iteration()
 
 
 if __name__ == '__main__':
