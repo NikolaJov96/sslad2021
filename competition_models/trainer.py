@@ -54,6 +54,7 @@ class Trainer:
     BATCHES_IN_ITERATION = 3
     ORIGINAL_TRAINING_SET = 5000
     LIMIT_EVALUATION_TO_100 = False
+    MIN_ANNOTATION_SCORE = 0.5
 
     def __init__(self, work_dir):
         """
@@ -74,11 +75,22 @@ class Trainer:
         self.evaluator = None
 
         # Load current session progress
+        self.initial_log = {}
+        if os.path.exists(self.initial_log_path()):
+            with open(self.initial_log_path(), 'r') as in_file:
+                self.initial_log = json.load(in_file)
+
         log_files = filter(lambda d: d.startswith('log'), os.listdir(self.log_dir))
         self.iteration_logs = []
         for log_file in log_files:
             with open(os.path.join(self.log_dir, log_file), 'r') as in_file:
                 self.iteration_logs.append(json.load(in_file))
+
+    def get_current_iteration(self):
+        """
+        """
+
+        return len(self.iteration_logs) + 1
 
     def get_evaluator(self):
         """
@@ -135,7 +147,7 @@ class Trainer:
         evaluation_end = time.time()
 
         # Save the training log
-        log = {
+        self.initial_log = {
             "training_time": train_end - train_start,
             "evaluation_time": evaluation_end - evaluation_start,
             "evaluation": result
@@ -147,9 +159,9 @@ class Trainer:
         """
         """
 
-        iteration = len(self.iteration_logs) + 1
+        iteration = self.get_current_iteration()
 
-        print('running iteration {}'.format(iteration))
+        print('\nrunning iteration {}'.format(iteration))
 
         # Get the dataset from the last iteration with additional annotations
         # predictied using the model saved by the previous iteration
@@ -231,7 +243,10 @@ class Trainer:
 
         # Check if current iteration has saved prediction data before by trying to load it
         try:
-            dataset.load(unlabeled_data_file=self.annotation_path(iteration))
+            dataset.load(
+                unlabeled_data_file=self.annotation_path(iteration),
+                min_annotation_score=Trainer.MIN_ANNOTATION_SCORE
+            )
             print('found saved annotations file for this iteration')
         except FileNotFoundError:
             # No file found
@@ -240,7 +255,10 @@ class Trainer:
                 dataset.load()
             else:
                 # For later iterations, load previous iteration annotations
-                dataset.load(unlabeled_data_file=self.annotation_path(iteration - 1))
+                dataset.load(
+                    unlabeled_data_file=self.annotation_path(iteration - 1),
+                    min_annotation_score=Trainer.MIN_ANNOTATION_SCORE
+                )
 
             for unlabeled_batch in range(Trainer.BATCHES_IN_ITERATION):
 
@@ -276,10 +294,11 @@ class Trainer:
         if iteration == 1:
             return []
         else:
-            base_unlabeled_training_data = self.iteration_logs[iteration - 1]['unlabeled_base']
-            best_sub_model_id = self.get_best_sub_model_id(iteration)
+            previous_iteration_log = self.iteration_logs[iteration - 2]
+            base_unlabeled_training_data = previous_iteration_log['unlabeled_base']
+            best_sub_model_id = self.get_best_sub_model_id(iteration - 1)
             base_unlabeled_training_data.append(
-                self.iteration_logs[iteration - 1]['unlabeled_tested'][best_sub_model_id]['unlabeled_id']
+                previous_iteration_log['unlabeled_tested'][best_sub_model_id]['unlabeled_id']
             )
             return base_unlabeled_training_data
 

@@ -77,7 +77,7 @@ class SSLADDataset:
         self.image_width = 0
         self.image_height = 0
 
-    def load(self, test_data_file=None, unlabeled_data_file=None):
+    def load(self, test_data_file=None, unlabeled_data_file=None, min_annotation_score=0.0):
         """
         Load dataset json descriptor files and store their data in structured from
         """
@@ -131,7 +131,7 @@ class SSLADDataset:
 
         # Load testing images annotations if load file provided
         if test_data_file is not None:
-            self.load_predictions(testing_images_map, test_data_file)
+            self.load_predictions(testing_images_map, test_data_file, min_annotation_score)
 
         # Initialize unlabeled images
         # Try to load all 10 unlabeled image batches
@@ -147,7 +147,7 @@ class SSLADDataset:
 
         # Load validation images annotations if load file provided
         if unlabeled_data_file is not None:
-            self.load_predictions(unlabeled_images_map, unlabeled_data_file)
+            self.load_predictions(unlabeled_images_map, unlabeled_data_file, min_annotation_score)
 
         # Move values from temporary maps to lists
         # Skip any images with no annotations in training and validation sets
@@ -211,7 +211,7 @@ class SSLADDataset:
         with open(data_file, 'w') as out_file:
             json.dump(save_data, out_file)
 
-    def load_predictions(self, images_map, data_file):
+    def load_predictions(self, images_map, data_file, min_annotation_score):
         """
         Loads saved predicted annotations for testing or unlabeled subsets
         """
@@ -222,11 +222,12 @@ class SSLADDataset:
                 testing_prediction_data = json.load(in_file)
             # Add annotations to images
             for annotation in testing_prediction_data:
-                images_map[annotation['image_id']].add_annotation(Annotation(
-                    self.categories[annotation['category_id']],
-                    annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3],
-                    annotation['score']
-                ))
+                if annotation['score'] >= min_annotation_score:
+                    images_map[annotation['image_id']].add_annotation(Annotation(
+                        self.categories[annotation['category_id']],
+                        annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3],
+                        annotation['score']
+                    ))
 
 
 if __name__ == '__main__':
