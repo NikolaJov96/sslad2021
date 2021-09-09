@@ -153,7 +153,7 @@ class Trainer:
             "evaluation": result
         }
         with open(self.initial_log_path(), 'w') as out_file:
-            json.dump(log, out_file)
+            json.dump(self.initial_log, out_file)
 
     def train_standard_iteration(self):
         """

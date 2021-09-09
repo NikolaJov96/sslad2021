@@ -54,8 +54,10 @@ def main():
     ax.set(
         xlabel='iteration',
         ylabel='average precision',
-        title='Average precisions',
+        title='Average precisions'
     )
+    ax.xaxis.set_ticks(iteration_numbers)
+    ax.set_ylim(min(0.0, min(average_precisions[0])) - 0.05, 1.05)
     ax.grid()
     ax.legend()
 
