@@ -1,6 +1,4 @@
 import matplotlib.pyplot as plt
-import os
-import pathlib
 import sys
 
 from competition_models.trainer import Trainer
@@ -18,8 +16,7 @@ def main():
     dataset = SSLADDataset()
     dataset.load()
 
-    work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(training_session))
-    trainer = Trainer(work_dir)
+    trainer = Trainer(training_session)
 
     average_precisions = [[] for _ in range(7)]
 

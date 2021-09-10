@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import pathlib
 import random
 import time
 
@@ -59,12 +60,15 @@ class Trainer:
     LIMIT_EVALUATION_TO_100 = False
     MIN_ANNOTATION_SCORE = 0.5
 
-    def __init__(self, work_dir):
+    def __init__(self, session_id):
         """
         """
 
+        self.session_id = session_id
+
         # Prepare work directories
-        self.work_dir = work_dir
+
+        self.work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(self.session_id))
         self.model_dir = os.path.join(self.work_dir, Trainer.MODELS_SUBDIR)
         self.annotation_dir = os.path.join(self.work_dir, Trainer.ANNOTATIONS_SUBDIR)
         self.log_dir = os.path.join(self.work_dir, Trainer.LOG_SUBDIR)
@@ -334,7 +338,7 @@ class Trainer:
 
         latest_log = self.iteration_logs[iteration - 1]
         results = [x['evaluation'][0] for x in latest_log['unlabeled_tested']]
-        print('last iteration results', results)
+        print('iteration {} results'.format(iteration), results)
         return results.index(max(results))
 
     def initial_log_path(self):
@@ -364,6 +368,12 @@ class Trainer:
 
         return os.path.join(self.annotation_dir, 'annotation_{}.json'.format(iteration))
 
+    def output_prediction_path(self, prediction_set):
+        """
+        """
+
+        return os.path.join(self.annotation_dir, '{}.json'.format(prediction_set))
+
     @staticmethod
     def copy_and_add_augmentations(images):
         """
@@ -384,20 +394,63 @@ class Trainer:
 
         return new_images
 
+    def generate_output_predictions(self, prediction_set):
+        """
+        """
+
+        if prediction_set not in ['validation', 'testing']:
+            print('invalid prediction_set: {}'.format(prediction_set))
+            return
+
+        print('predicting {}'.format(prediction_set))
+
+        is_validation = prediction_set == 'validation'
+
+        dataset = SSLADDataset()
+        dataset.load(filter_no_annotations=False)
+        images = dataset.validation_images if is_validation else dataset.testing_images
+        num_images = len(images)
+
+        # Load latest model
+        model = self.load_best_model(self.get_current_iteration() - 1)
+
+        for id, image in enumerate(images):
+
+            if (id * 100) % num_images == 0:
+                print('\rimage {}/{}'.format(id, num_images), end='')
+
+            # Clear potential previous annotations
+            image.annotations = []
+
+            # Generate new annotations
+            predictions = model.eval([image.get_pil_img()])
+            annotations = DatasetWrapper.prediction_to_annotations(dataset, predictions)[0]
+            annotations = [annotation for annotation in annotations if annotation.score > 0.5]
+            image.add_annotations(annotations)
+        print()
+
+        # TODO: Remove annotations to achieve 8 average annotations per image
+        # in case that number is drastically different
+
+        # Save generated predictions
+        save_file = self.output_prediction_path(prediction_set)
+        if is_validation:
+            dataset.save_validation_predictions(save_file)
+        else:
+            dataset.save_test_predictions(save_file)
+
 
 def main():
     """
     """
 
-    import pathlib
     import sys
 
     if len(sys.argv) != 2:
         print('usage: python3 trainer.py session_id')
     training_session = sys.argv[1]
 
-    work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(training_session))
-    trainer = Trainer(work_dir)
+    trainer = Trainer(training_session)
 
     for _ in range(1000):
         trainer.train_iteration()

@@ -77,7 +77,13 @@ class SSLADDataset:
         self.image_width = 0
         self.image_height = 0
 
-    def load(self, test_data_file=None, unlabeled_data_file=None, min_annotation_score=0.0):
+    def load(
+        self,
+        validation_data_file=None,
+        test_data_file=None,
+        unlabeled_data_file=None,
+        min_annotation_score=0.0,
+        filter_no_annotations=True):
         """
         Load dataset json descriptor files and store their data in structured from
         """
@@ -118,10 +124,15 @@ class SSLADDataset:
             )
 
         # Initialize validation annotations
-        for annotation in validation_data['annotations']:
-            validation_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
-                self.categories[annotation['category_id']], annotation
-            ))
+        if validation_data_file is None:
+            # Keep original validation image annotations
+            for annotation in validation_data['annotations']:
+                validation_images_map[annotation['image_id']].add_annotation(Annotation.from_annotation_data(
+                    self.categories[annotation['category_id']], annotation
+                ))
+        else:
+            # Load validation images annotations from the provided file
+            self.load_predictions(validation_images_map, validation_data_file, min_annotation_score)
 
         # Initialize testing images
         for image in testing_data['images']:
@@ -145,14 +156,18 @@ class SSLADDataset:
                         SSLADDataset.DATA_PATH, image, SSLADDatasetTypes.UNLABELED
                     )
 
-        # Load validation images annotations if load file provided
+        # Load unlabeled images annotations if load file provided
         if unlabeled_data_file is not None:
             self.load_predictions(unlabeled_images_map, unlabeled_data_file, min_annotation_score)
 
         # Move values from temporary maps to lists
         # Skip any images with no annotations in training and validation sets
-        self.training_images = [image for image in training_images_map.values() if len(image.annotations) > 0]
-        self.validation_images = [image for image in validation_images_map.values() if len(image.annotations) > 0]
+        self.training_images = [
+            image for image in training_images_map.values() if not filter_no_annotations or len(image.annotations) > 0
+        ]
+        self.validation_images = [
+            image for image in validation_images_map.values() if not filter_no_annotations or len(image.annotations) > 0
+        ]
         self.testing_images = list(testing_images_map.values())
         self.unlabeled_images = list(unlabeled_images_map.values())
 
@@ -176,6 +191,14 @@ class SSLADDataset:
             return self.unlabeled_images
         else:
             return []
+
+    def save_validation_predictions(self, validation_data_file):
+        """
+        Saves annotations assigned to validation images,
+        assuming original annotations were manually cleared
+        """
+
+        SSLADDataset.save_predictions(self.validation_images, validation_data_file)
 
     def save_test_predictions(self, test_data_file):
         """
