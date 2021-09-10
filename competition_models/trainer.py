@@ -1,7 +1,10 @@
+import copy
 import json
 import os
+import random
 import time
 
+from competition_models.augmentations import FlipImage, ScaleBrightness
 from competition_models.dataset_wrapper import DatasetWrapper
 from competition_models.evaluator import Evaluator
 from competition_models.faster_rcnn import FasterRCNN
@@ -51,7 +54,7 @@ class Trainer:
     ANNOTATIONS_SUBDIR = 'annotations'
 
     UNLABELED_BATCH = 3000
-    BATCHES_IN_ITERATION = 3
+    BATCHES_IN_ITERATION = 1
     ORIGINAL_TRAINING_SET = 5000
     LIMIT_EVALUATION_TO_100 = False
     MIN_ANNOTATION_SCORE = 0.5
@@ -176,7 +179,7 @@ class Trainer:
         print('new unlabeled batch ids', new_unlabeled_batches)
 
         log = {
-            "unlabeled_base": [],
+            "unlabeled_base": base_unlabeled_batches,
             "unlabeled_tested": []
         }
 
@@ -185,27 +188,30 @@ class Trainer:
             # Load latest model
             model = self.load_best_model(iteration - 1)
 
-            # Prepare dataset wrapper for the current batch
-            # TODO: Add a selection of previously annotated unlabeled data to this set
-            dataset_images = dataset.unlabeled_images[
+            # Prepare dataset wrapper for the current batch of unlabeled data
+            # Optional: Revisit some of the unlabeled data batches already used for training
+            unlabeled_images = dataset.unlabeled_images[
                     new_unlabeled_batch * Trainer.UNLABELED_BATCH: (new_unlabeled_batch + 1) * Trainer.UNLABELED_BATCH
                 ]
-            dataset_images = [image for image in dataset_images if len(image.annotations) > 0]
-            print('images after filtering', len(dataset_images))
-            dataset_wrapper = DatasetWrapper(images=dataset_images)
+            unlabeled_images = [image for image in unlabeled_images if len(image.annotations) > 0]
+            print('images after filtering', len(unlabeled_images))
+            unlabeled_wrapper = DatasetWrapper(images=unlabeled_images)
+
+            # Prepare dataset wrapper for the original training data
+            training_images = Trainer.copy_and_add_augmentations(
+                dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
+            )
+            training_wrapper = DatasetWrapper(images=training_images)
+
 
             # Train the model saved by the last iteration
             train_start = time.time()
             # Train with unlabeled data
             print('iteration {}, batch {}, unlabeled training'.format(iteration, i))
-            model.train(dataset=dataset_wrapper, num_epochs=5)
+            model.train(dataset=unlabeled_wrapper, num_epochs=5)
             # Train with original training data
             print('iteration {}, batch {}, original data training'.format(iteration, i))
-            model.train(dataset=DatasetWrapper(
-                    images=dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
-                ),
-                num_epochs=5
-            )
+            model.train(dataset=training_wrapper, num_epochs=5)
             train_end = time.time()
 
             # Save the trained model
@@ -221,7 +227,7 @@ class Trainer:
 
             # Add results of this batch to the iteration log
             log["unlabeled_tested"].append({
-                "unlabeled_id": i,
+                "unlabeled_id": (iteration - 1) * Trainer.BATCHES_IN_ITERATION + i,
                 "training_time": train_end - train_start,
                 "evaluation_time": evaluation_end - evaluation_start,
                 "evaluation": result
@@ -331,7 +337,6 @@ class Trainer:
         print('last iteration results', results)
         return results.index(max(results))
 
-
     def initial_log_path(self):
         """
         """
@@ -359,6 +364,26 @@ class Trainer:
 
         return os.path.join(self.annotation_dir, 'annotation_{}.json'.format(iteration))
 
+    @staticmethod
+    def copy_and_add_augmentations(images):
+        """
+        """
+
+        new_images = [copy.deepcopy(image) for image in images]
+
+        # Flip some images
+        num_images = int(len(new_images) * 0.5)
+        for image in random.sample(new_images, num_images):
+            image.add_augmentation(FlipImage())
+
+        # Scale brightness of some images
+        num_images = int(len(new_images) * 0.2)
+        for image in random.sample(new_images, num_images):
+            random_scale_factor = 0.2 + random.random() * 0.6
+            image.add_augmentation(ScaleBrightness(random_scale_factor))
+
+        return new_images
+
 
 def main():
     """
@@ -374,7 +399,7 @@ def main():
     work_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), 'session_{}'.format(training_session))
     trainer = Trainer(work_dir)
 
-    for _ in range(10):
+    for _ in range(1000):
         trainer.train_iteration()
 
 
