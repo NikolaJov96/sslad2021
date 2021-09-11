@@ -5,7 +5,7 @@ import pathlib
 import random
 import time
 
-from competition_models.augmentations import FlipImage, ScaleBrightness
+from competition_models.augmentations import AddNoise, FlipImage, ScaleBrightness
 from competition_models.dataset_wrapper import DatasetWrapper
 from competition_models.evaluator import Evaluator
 from competition_models.faster_rcnn import FasterRCNN
@@ -55,7 +55,7 @@ class Trainer:
     ANNOTATIONS_SUBDIR = 'annotations'
 
     UNLABELED_BATCH = 3000
-    BATCHES_IN_ITERATION = 1
+    BATCHES_IN_ITERATION = 2
     ORIGINAL_TRAINING_SET = 5000
     LIMIT_EVALUATION_TO_100 = False
     MIN_ANNOTATION_SCORE = 0.5
@@ -202,6 +202,7 @@ class Trainer:
             unlabeled_wrapper = DatasetWrapper(images=unlabeled_images)
 
             # Prepare dataset wrapper for the original training data
+            # TODO: Add in the validation data after the final model structure is reached
             training_images = Trainer.copy_and_add_augmentations(
                 dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
             )
@@ -387,10 +388,16 @@ class Trainer:
             image.add_augmentation(FlipImage())
 
         # Scale brightness of some images
-        num_images = int(len(new_images) * 0.2)
+        num_images = int(len(new_images) * 0.3)
         for image in random.sample(new_images, num_images):
             random_scale_factor = 0.2 + random.random() * 0.6
             image.add_augmentation(ScaleBrightness(random_scale_factor))
+
+        # Add noise to some images
+        num_images = int(len(new_images) * 0.3)
+        for image in random.sample(new_images, num_images):
+            random_scale = 0.5 + random.random() * 2.0
+            image.add_augmentation(AddNoise(random_scale))
 
         return new_images
 

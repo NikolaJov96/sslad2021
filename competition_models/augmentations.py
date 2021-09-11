@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 from copy import deepcopy
+from imgaug import augmenters as iaa
+from math import sqrt
 from PIL import Image as PILImage
 
 
@@ -89,6 +91,49 @@ class FlipImage(Augmentation):
         return img.transpose(method=PILImage.FLIP_LEFT_RIGHT)
 
 
+class AddNoise(Augmentation):
+    """
+    Add noise to the image
+    """
+
+    def __init__(self, scale=0.1):
+        """
+        Initialize parameters
+        """
+        super().__init__()
+
+        self.scale = scale * 255
+
+    def apply_to_cv2_img(self, img):
+        """
+        Add noise to the image in the cv2 format
+        """
+
+        # Use pil to generate the image
+        pil_img = PILImage.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        pil_img = self.apply_to_pil_img(pil_img)
+
+        return cv2.cvtColor(np.asarray(pil_img), cv2.cv2.COLOR_RGB2BGR)
+
+    def apply_to_pil_img(self, img):
+        """
+        Add noise to the image in the pil format
+        """
+
+        im_arr = np.asarray(img)
+
+        # Gaussian noise
+        aug = iaa.AdditiveGaussianNoise(loc=0, scale=self.scale)
+        # Poisson noise
+        # aug = iaa.AdditivePoissonNoise(lam=10.0, per_channel=True)
+        # Salt and pepper noise
+        # aug = iaa.SaltAndPepper(p=0.05)
+
+        im_arr = aug.augment_image(im_arr)
+
+        return PILImage.fromarray(im_arr).convert('RGB')
+
+
 def main():
     """
     Show augmentations on one training set image
@@ -104,7 +149,9 @@ def main():
     augmentations = [
         Augmentation(),
         ScaleBrightness(0.5),
-        FlipImage()
+        FlipImage(),
+        AddNoise(0.05),
+        AddNoise(0.3),
     ]
 
     window_name = 'Augmentations'
