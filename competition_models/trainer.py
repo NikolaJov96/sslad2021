@@ -105,7 +105,7 @@ class Trainer:
 
         if self.evaluator is None:
             dataset = SSLADDataset()
-            dataset.load()
+            dataset.load(filter_no_annotations=False)
             validation_data = dataset.get_subset(SSLADDatasetTypes.VALIDATION)
             if Trainer.LIMIT_EVALUATION_TO_100:
                 validation_data = validation_data[:100]

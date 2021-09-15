@@ -29,6 +29,8 @@ if __name__ == '__main__':
 
         # Exit on esc
         if cv2.waitKey(0) == 27:
+            print()
             exit(0)
+    print()
 
     cv2.destroyAllWindows()
