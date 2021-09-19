@@ -21,11 +21,13 @@ def main():
 
     average_precisions = [[] for _ in range(7)]
 
+    # Get APs for the initially trained model
     print('iteration 0')
     print('result {}'.format(trainer.initial_log["evaluation"]))
     for ap_id in range(7):
         average_precisions[ap_id].append(trainer.initial_log["evaluation"][ap_id])
 
+    # Get APs for each following training iteration
     for i, log in enumerate(trainer.iteration_logs):
         iteration = i + 1
         print('iteration {}'.format(iteration))
@@ -44,7 +46,7 @@ def main():
     iteration_numbers = list(range(len(trainer.iteration_logs) + 1))
     labels = ['Mean ap'] + ['{} ap'.format(dataset.categories[category_id].name) for category_id in dataset.categories]
 
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
 
     for ap_id in range(7):
         ax.plot(iteration_numbers, average_precisions[ap_id], label=labels[ap_id])
