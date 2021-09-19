@@ -87,7 +87,8 @@ class Trainer:
             with open(self.initial_log_path(), 'r') as in_file:
                 self.initial_log = json.load(in_file)
 
-        log_files = filter(lambda d: d.startswith('log'), os.listdir(self.log_dir))
+        num_log_files = len(list(filter(lambda d: d.startswith('log'), os.listdir(self.log_dir))))
+        log_files = [self.log_path(i + 1) for i in range(num_log_files)]
         self.iteration_logs = []
         for log_file in log_files:
             with open(os.path.join(self.log_dir, log_file), 'r') as in_file:
@@ -105,7 +106,9 @@ class Trainer:
 
         if self.evaluator is None:
             dataset = SSLADDataset()
-            dataset.load(filter_no_annotations=False)
+            # Evaluator unfortunately fails if it receives images with no annotations,
+            # using only images with annotations for validation should give close enough estimate
+            dataset.load(filter_no_annotations=True)
             validation_data = dataset.get_subset(SSLADDatasetTypes.VALIDATION)
             if Trainer.LIMIT_EVALUATION_TO_100:
                 validation_data = validation_data[:100]
@@ -192,31 +195,27 @@ class Trainer:
             # Load latest model
             model = self.load_best_model(iteration - 1)
 
-            # Prepare dataset wrapper for the current batch of unlabeled data
+            # Prepare images of the current batch of unlabeled data
             # Optional: Revisit some of the unlabeled data batches already used for training
             unlabeled_images = dataset.unlabeled_images[
-                    new_unlabeled_batch * Trainer.UNLABELED_BATCH: (new_unlabeled_batch + 1) * Trainer.UNLABELED_BATCH
-                ]
+                new_unlabeled_batch * Trainer.UNLABELED_BATCH: (new_unlabeled_batch + 1) * Trainer.UNLABELED_BATCH
+            ]
             unlabeled_images = [image for image in unlabeled_images if len(image.annotations) > 0]
-            print('images after filtering', len(unlabeled_images))
-            unlabeled_wrapper = DatasetWrapper(images=unlabeled_images)
+            print('unlabeled images after filtering', len(unlabeled_images))
 
-            # Prepare dataset wrapper for the original training data
+            # Prepare images of the original training data
             # TODO: Add in the validation data after the final model structure is reached
             training_images = Trainer.copy_and_add_augmentations(
                 dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
             )
-            training_wrapper = DatasetWrapper(images=training_images)
 
+            # Create combined unlabeled and training dataset wrapper
+            dataset_wrapper = DatasetWrapper(images=unlabeled_images + training_images)
 
             # Train the model saved by the last iteration
+            print('iteration {}, batch {}, training'.format(iteration, i))
             train_start = time.time()
-            # Train with unlabeled data
-            print('iteration {}, batch {}, unlabeled training'.format(iteration, i))
-            model.train(dataset=unlabeled_wrapper, num_epochs=5)
-            # Train with original training data
-            print('iteration {}, batch {}, original data training'.format(iteration, i))
-            model.train(dataset=training_wrapper, num_epochs=5)
+            model.train(dataset=dataset_wrapper, num_epochs=5)
             train_end = time.time()
 
             # Save the trained model
@@ -325,9 +324,9 @@ class Trainer:
         else:
             # Load the best model from the last iteration
             best_sub_model_id = self.get_best_sub_model_id(iteration)
-            print('iteration {} best model id: {}'.format(iteration, best_sub_model_id))
-
-            model.load_model(self.model_path(iteration, best_sub_model_id))
+            model_path = self.model_path(iteration, best_sub_model_id)
+            print('iteration {} best model id: {} at {}'.format(iteration, best_sub_model_id, model_path))
+            model.load_model(model_path)
 
         return model
 

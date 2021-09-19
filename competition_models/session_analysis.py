@@ -7,6 +7,7 @@ from structures.sslad_2d.sslad_dataset import SSLADDataset
 
 def main():
     """
+    Creates a graph of a category AP for each training iteration for all categories
     """
 
     if len(sys.argv) != 2:
