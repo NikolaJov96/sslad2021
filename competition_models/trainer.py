@@ -59,6 +59,7 @@ class Trainer:
     ORIGINAL_TRAINING_SET = 5000
     LIMIT_EVALUATION_TO_100 = False
     MIN_ANNOTATION_SCORE = 0.5
+    USE_VALIDATION_FOR_TRAINING = True
 
     def __init__(self, session_id):
         """
@@ -208,6 +209,10 @@ class Trainer:
             training_images = Trainer.copy_and_add_augmentations(
                 dataset.training_images[:Trainer.ORIGINAL_TRAINING_SET]
             )
+
+            # Prepare images of the original validation data
+            if Trainer.USE_VALIDATION_FOR_TRAINING:
+                training_images += Trainer.copy_and_add_augmentations(dataset.validation_images)
 
             # Create combined unlabeled and training dataset wrapper
             dataset_wrapper = DatasetWrapper(images=unlabeled_images + training_images)
@@ -416,6 +421,7 @@ class Trainer:
         dataset.load(filter_no_annotations=False)
         images = dataset.validation_images if is_validation else dataset.testing_images
         num_images = len(images)
+        total_annotations = 0
 
         # Load latest model
         model = self.load_best_model(self.get_current_iteration() - 1)
@@ -432,11 +438,13 @@ class Trainer:
             predictions = model.eval([image.get_pil_img()])
             annotations = DatasetWrapper.prediction_to_annotations(dataset, predictions)[0]
             annotations = [annotation for annotation in annotations if annotation.score > 0.5]
+            total_annotations += len(annotations)
             image.add_annotations(annotations)
         print()
 
         # TODO: Remove annotations to achieve 8 average annotations per image
         # in case that number is drastically different
+        print('average annotations per image {}'.format(total_annotations / num_images))
 
         # Save generated predictions
         save_file = self.output_prediction_path(prediction_set)
