@@ -22,6 +22,7 @@ Explore the dataset by running scripts inside the `exploring_data/` directory.
 
 ```
 python3 exploring_data/display_training_bbox.py
+python3 exploring_data/display_no_annotations_images.py
 python3 exploring_data/bbox_distribution.py
 python3 exploring_data/lighting.py
 ```
@@ -83,3 +84,40 @@ python3 competition_models/augmentations.py
 ```
 
 ### Trainer algorithm
+
+Training is initialized by training the initial model on the training set. After that training proceeds with the following algorithm:
+
+1) Best model of the previous iteration (or the initial model) is loaded
+2) Loaded model is used to label a few previously unused chunks of unlabeled data
+3) Each chunk is individually added to the training set and model is trained on them
+4) All models corresponding to different chunks are evaluated using the validation set
+5) All models, evaluation results and annotations are stored
+6) Repeat
+
+During each iteration progress is saved so that it can be continued later. When running the training, a session id can be specified, so that all generated content is stored in the session specific folder, enabling running multiple session with different algorithm parameters.
+
+To start the training run `trainer.py`, providing the session id:
+
+```
+python3 competition_models/trainer.py 1
+```
+
+To visualize model validation scores through iterations run `session_analysis.py`, providing the session id:
+
+```
+python3 competition_models/session_analysis.py 1
+```
+
+To generate predictions in the competition compatible format run `generate_predictions.py`, providing the session id and 'validation' or 'testing' to indicate the data set. Generated annotation file will be stored in the session annotations directory.
+
+```
+python3 competition_models/generate_predictions.py 1 testing
+```
+
+To display generated predictions image by image run `preview_predictions.py`, providing the session id and 'validation' or 'testing' to indicate the data set:
+
+```
+python3 competition_models/preview_predictions.py 1 testing
+```
+
+## Competition results
