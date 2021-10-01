@@ -1,3 +1,13 @@
+<style> .images td, .images th { border: none!important; } </style>
+<div class="images">
+
+|||
+|-|-|
+![](example_result_images/1.png)  |  ![](example_result_images/2.png)
+![](example_result_images/3.png)  |  ![](example_result_images/4.png)
+
+</div>
+
 # sslad2021
 
 Entry for ICCV 2021 Workshop: Self-supervised Learning for Next-Generation Industry-level Autonomous Driving competition - [sslad2021](https://sslad2021.github.io/pages/challenge.html).
@@ -120,4 +130,14 @@ To display generated predictions image by image run `preview_predictions.py`, pr
 python3 competition_models/preview_predictions.py 1 testing
 ```
 
-## Competition results
+## Results
+
+| Model | Dataset set | Mean AP | Pedestrian AP | Cyclist AP | Car AP | Truck AP | Tram AP | Tricycle AP |
+| - | - | - | - | - | - | - | - | - |
+| Baseline | Validation | 58.04 | 61.90 | 73.40 | 73.96 | 57.04 | 53.85 | 28.13 |
+| Our model | Validation | 68.78 | 62.46 | 78.99 | 86.17 | 76.55 | 75.37| 33.14 |
+| Our model | Testing | 52.39 | 51.00 | 63.68 | 78.56 | 61.60 | 51.20| 8.34 |
+
+\* The validation set can be overfitted as it is also used for training
+
+The validation and testing predictions submitted for the competition are included in the session_2 directory and can be previewed using the scripts explained above.

@@ -15,3 +15,9 @@
 
 # VSCode metadata directory
 /.vscode/
+
+# Include prediction files submitted for the competition
+# Test set predictions
+!/competition_models/session_2/annotations/testing.json
+# Validation set predictions
+!/competition_models/session_2/annotations/validation.json
