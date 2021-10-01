@@ -125,7 +125,7 @@ python3 competition_models/preview_predictions.py 1 testing
 
 ## Results
 
-| Model | Dataset set | Mean AP | Pedestrian AP | Cyclist AP | Car AP | Truck AP | Tram AP | Tricycle AP |
+| Model | Dataset | Mean AP | Pedestrian AP | Cyclist AP | Car AP | Truck AP | Tram AP | Tricycle AP |
 | - | - | - | - | - | - | - | - | - |
 | Baseline | Validation | **58.04** | 61.90 | 73.40 | 73.96 | 57.04 | 53.85 | 28.13 |
 | Our model | Validation | **68.78** | 62.46 | 78.99 | 86.17 | 76.55 | 75.37| 33.14 |
